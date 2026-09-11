@@ -19,7 +19,11 @@ public enum QuestDecisionKind
     MoveToProfileLocation,
     QuestInteractionDeferred,
     ItemUseDeferred,
-    UnsupportedProfileNode
+    UnsupportedProfileNode,
+    ObjectiveInProgress,
+    QuestStateBlocked,
+    ProfileComplete,
+    TurnInReady
 }
 
 public enum QuestFlowState
@@ -41,7 +45,7 @@ public sealed record QuestDecision(
     uint Entry = 0,
     WoWPoint? Destination = null);
 
-public sealed class QuestBot : BotBase
+public sealed partial class QuestBot : BotBase
 {
     private Composite? _root;
     private int _profileNodeIndex;
@@ -123,6 +127,7 @@ public sealed class QuestBot : BotBase
     public override void Start()
     {
         _profileNodeIndex = 0;
+        _questOrderProfile = null;
         _activeHotspot = null;
         _stickyTargetGuid = 0;
         _releasedTargetGuids.Clear();
@@ -176,9 +181,11 @@ public sealed class QuestBot : BotBase
         if (MovementGoalReached || MovementAborted)
             return;
         Profile profile = ProfileManager.CurrentProfile;
+        if (EvaluateQuestOrder(profile))
+            return;
         ProfileNode? node = profile.QuestOrder.Count == 0
             ? null
-            : profile.QuestOrder[Math.Clamp(_profileNodeIndex, 0, profile.QuestOrder.Count - 1)];
+            : profile.QuestOrder[_profileNodeIndex];
 
         if (node is GrindToNode || node is null)
         {
@@ -332,6 +339,15 @@ public sealed class QuestBot : BotBase
     {
         if (!MovementExecutionEnabled || MovementGoalReached || MovementAborted)
             return;
+
+        // Waiting for quest data or interaction is not a navigation stall.
+        if (CurrentDecision.Kind is not (QuestDecisionKind.AcquireTarget or
+            QuestDecisionKind.MoveToHotspot or QuestDecisionKind.MoveToProfileLocation))
+        {
+            Navigator.Clear();
+            ResetProgressTracking();
+            return;
+        }
 
         LocalPlayer? me = StyxWoW.Me;
         if (me is null || !me.IsValid)

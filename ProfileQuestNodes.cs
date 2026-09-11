@@ -42,6 +42,23 @@ public sealed class TurnInNode : ProfileNode
     public uint TurnInId { get; }
 }
 
+// Follows the existing reconstruction's ProfileNode naming convention.
+// The supported XML form is Objective Type="KillMob" QuestId/MobId/KillCount.
+public sealed class ObjectiveNode : ProfileNode
+{
+    public ObjectiveNode(uint questId, string type, uint mobId, int killCount) : base("Objective")
+    {
+        QuestId = questId;
+        Type = type;
+        MobId = mobId;
+        KillCount = killCount;
+    }
+    public uint QuestId { get; }
+    public string Type { get; }
+    public uint MobId { get; }
+    public int KillCount { get; }
+}
+
 public sealed class UseItemNode : ProfileNode
 {
     public UseItemNode(uint itemId) : base("UseItem") => ItemId = itemId;

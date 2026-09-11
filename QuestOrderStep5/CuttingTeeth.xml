@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<HBProfile>
+  <Name>Cutting Teeth - Objective to TurnIn</Name>
+  <QuestOrder>
+    <Objective QuestName="Cutting Teeth" QuestId="788" Type="KillMob" MobId="3098" KillCount="10" />
+    <TurnIn QuestName="Cutting Teeth" QuestId="788" TurnInName="Gornek" TurnInId="3143" />
+  </QuestOrder>
+</HBProfile>

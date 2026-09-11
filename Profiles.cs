@@ -142,12 +142,27 @@ public sealed class Profile
                 "TurnIn" => new TurnInNode(
                     ParseUInt(Attr(element, "QuestId")),
                     ParseUInt(Attr(element, "TurnInId") ?? Attr(element, "QuestGiverId"))) { GoalText = goalText },
+                "Objective" => ParseObjective(element, goalText),
                 "UseItem" => new UseItemNode(
                     ParseUInt(Attr(element, "ItemId") ?? Attr(element, "Id"))) { GoalText = goalText },
                 _ => new UnknownProfileNode(name) { GoalText = goalText }
             };
             output.Add(node);
         }
+    }
+
+    private static ObjectiveNode ParseObjective(XElement element, string? goalText)
+    {
+        uint questId = ParseUInt(Attr(element, "QuestId"));
+        string type = Attr(element, "Type") ?? string.Empty;
+        uint mobId = ParseUInt(Attr(element, "MobId"));
+        int count = ParseInt(Attr(element, "KillCount"), 0);
+        if (questId == 0 || type.Length == 0)
+            throw new InvalidDataException("Objective requires a positive QuestId and a Type.");
+        if (type == "KillMob" && (mobId == 0 || mobId > int.MaxValue || count <= 0))
+            throw new InvalidDataException("KillMob Objective requires a positive MobId and KillCount.");
+        // Other types remain visible and block execution instead of being skipped.
+        return new ObjectiveNode(questId, type, mobId, count) { GoalText = goalText };
     }
 
     private static void ParseAvoidMobs(XElement root, HashSet<uint> output)

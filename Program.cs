@@ -22,6 +22,12 @@ internal static class Program
 
     private static int Main(string[] args)
     {
+        if (args.Any(a => string.Equals(a, "--quest-order-self-test", StringComparison.OrdinalIgnoreCase)))
+            return QuestOrderProbe.RunSelfTest();
+        int orderTest = Array.FindIndex(args, a => string.Equals(a, "--quest-order-test", StringComparison.OrdinalIgnoreCase));
+        if (orderTest >= 0)
+            return QuestOrderProbe.RunLive(orderTest + 1 < args.Length ? args[orderTest + 1] : null);
+
         if (args.Any(a => string.Equals(a, "--quest-cache-metadata-test", StringComparison.OrdinalIgnoreCase)))
             return QuestCacheProbe.RunLive();
         int fileTest = Array.FindIndex(args, a => string.Equals(a, "--quest-cache-file-test", StringComparison.OrdinalIgnoreCase));

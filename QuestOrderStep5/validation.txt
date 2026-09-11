@@ -1,0 +1,4 @@
+Build: net10.0 / SDK 10.0.401, 0 warnings, 0 errors.
+QUEST ORDER STEP 5 SELF TEST: PASS (21 checks; actual QuestBot root ticks with internal test snapshots)
+QUEST CACHE STEP 4 SELF TEST: PASS (363 assertions; real quest-4641 fixture=verified)
+New live QuestOrder probe: not run here.
