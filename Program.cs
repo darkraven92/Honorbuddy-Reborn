@@ -326,23 +326,26 @@ internal static class Program
     {
         try
         {
-            Console.WriteLine("Honorbuddy Reborn 1.12.1 - original QuestLog compatibility probe");
-            Console.WriteLine("----------------------------------------------------------------");
+            Console.WriteLine("Honorbuddy Reborn 1.12.1 - original QuestLog + PlayerQuest compatibility probe");
+            Console.WriteLine("-------------------------------------------------------------------------------");
 
             ObjectManager.Initialize5875();
             LocalPlayer me = StyxWoW.Me
                 ?? throw new InvalidOperationException("LocalPlayer unavailable after initialization.");
 
             Styx.Logic.Questing.QuestLog questLog = me.QuestLog;
+            List<Styx.Logic.Questing.PlayerQuest> allQuests = questLog.GetAllQuests();
 
-            Console.WriteLine($"PID:                 {ObjectManager.WoWProcess?.Id}");
-            Console.WriteLine($"Player:              {me.Race} class={me.ClassId} level={me.Level}");
-            Console.WriteLine($"QuestLog.QuestCount: {questLog.QuestCount}");
+            Console.WriteLine($"PID:                    {ObjectManager.WoWProcess?.Id}");
+            Console.WriteLine($"Player:                 {me.Race} class={me.ClassId} level={me.Level}");
+            Console.WriteLine($"QuestLog.QuestCount:    {questLog.QuestCount}");
+            Console.WriteLine($"GetAllQuests().Count:   {allQuests.Count}");
             Console.WriteLine();
-            Console.WriteLine("Active quest-log slots");
-            Console.WriteLine("----------------------");
+            Console.WriteLine("Active PlayerQuest wrappers");
+            Console.WriteLine("---------------------------");
 
             int active = 0;
+            bool wrappersValid = true;
             for (uint index = 0; index < Vanilla5875.QuestLogSlotCount; index++)
             {
                 uint id = questLog.GetQuestId(index);
@@ -351,30 +354,54 @@ internal static class Program
 
                 Styx.Logic.Questing.QuestLogEntry info =
                     questLog.GetQuestInfo(checked((int)index));
-                int resolvedIndex = questLog.GetIndexForQuest(id);
-                bool contains = questLog.ContainsQuest(id);
+                Styx.Logic.Questing.PlayerQuest? byIndex = questLog.GetQuest(index);
+                Styx.Logic.Questing.PlayerQuest? byId = questLog.GetQuestById(id);
 
+                Styx.Logic.Questing.WoWDescriptorQuest descriptor = default;
+                bool gotData = byIndex?.GetData(ref descriptor) == true;
+                bool expectedCompleted =
+                    (info.State & Styx.Logic.Questing.StateFlag.Completed) != 0;
+                bool expectedFailed =
+                    (info.State & Styx.Logic.Questing.StateFlag.Failed) != 0;
+
+                bool valid =
+                    byIndex is not null &&
+                    byId is not null &&
+                    byIndex.Id == id &&
+                    byId.Id == id &&
+                    gotData &&
+                    descriptor.Id == id &&
+                    byIndex.IsCompleted == expectedCompleted &&
+                    byIndex.IsFailed == expectedFailed;
+
+                wrappersValid &= valid;
                 Console.WriteLine(
-                    $"slot={index,2} id={id,-6} state={info.State,-10} " +
-                    $"objectives=[{string.Join(",", info.ObjectiveRequiredCounts)}] " +
-                    $"time={info.Time,-10} index={resolvedIndex,2} contains={contains}");
+                    $"slot={index,2} id={id,-6} PlayerQuest.Id={byIndex?.Id ?? 0,-6} " +
+                    $"completed={byIndex?.IsCompleted ?? false,-5} failed={byIndex?.IsFailed ?? false,-5} " +
+                    $"GetData={gotData,-5} flags={descriptor.Flags,-10} valid={valid}");
                 active++;
             }
 
             Console.WriteLine();
-            bool pass = active == questLog.QuestCount;
+            bool pass =
+                active == questLog.QuestCount &&
+                allQuests.Count == active &&
+                wrappersValid;
+
             Console.WriteLine(pass
-                ? "QUESTLOG RESULT: PASS - Honorbuddy LocalPlayer.QuestLog reads the Vanilla 5875 descriptor slots."
-                : $"QUESTLOG RESULT: FAIL - enumerated {active} active slots but QuestCount reported {questLog.QuestCount}.");
-            Console.WriteLine("Input:                none");
-            Console.WriteLine("Memory writes:        none");
-            Console.WriteLine("Addon/chatlog bridge: none");
+                ? "QUESTLOG STEP 2 RESULT: PASS - Honorbuddy GetAllQuests/GetQuest/GetQuestById return live PlayerQuest wrappers on build 5875."
+                : "QUESTLOG STEP 2 RESULT: FAIL - PlayerQuest wrapper invariants did not hold.");
+            Console.WriteLine("Public model:          Quest -> PlayerQuest -> WoWDescriptorQuest");
+            Console.WriteLine("Build-specific layer:  Vanilla5875QuestLogReader (internal)");
+            Console.WriteLine("Input:                 none");
+            Console.WriteLine("Memory writes:         none");
+            Console.WriteLine("Addon/chatlog bridge:  none");
             return pass ? 0 : 2;
         }
         catch (Exception ex)
         {
             Console.Error.WriteLine();
-            Console.Error.WriteLine("QUESTLOG RESULT: ERROR");
+            Console.Error.WriteLine("QUESTLOG STEP 2 RESULT: ERROR");
             Console.Error.WriteLine(ex);
             return 1;
         }

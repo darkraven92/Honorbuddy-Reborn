@@ -5,7 +5,7 @@ using Styx.WoWInternals.WoWObjects;
 namespace Honorbuddy5875.Runtime;
 
 /// <summary>
-/// Build-specific implementation hidden under Honorbuddy's public QuestLog API.
+/// Build-specific implementation hidden under Honorbuddy's public QuestLog/PlayerQuest APIs.
 /// WoW 1.12.1 uses 20 slots of three DWORDs each:
 /// +0 quest id, +4 four 6-bit counters plus state byte, +8 timer.
 /// </summary>
@@ -37,6 +37,40 @@ internal static class Vanilla5875QuestLogReader
             ObjectiveRequiredCounts = counts,
             Time = unchecked((int)time)
         };
+    }
+
+    public static WoWDescriptorQuest ReadDescriptorQuest(int index)
+    {
+        QuestLogEntry info = ReadQuestInfo(index);
+        var objectives = new ushort[4];
+        for (int i = 0; i < objectives.Length; i++)
+            objectives[i] = unchecked((ushort)info.ObjectiveRequiredCounts[i]);
+
+        return new WoWDescriptorQuest
+        {
+            Id = unchecked((uint)info.Id),
+            Flags = (WoWDescriptorQuestFlags)(byte)info.State,
+            ObjectivesDone = objectives,
+            SecondsBeforeFailed = unchecked((uint)info.Time)
+        };
+    }
+
+    public static bool TryReadDescriptorQuest(uint questId, out WoWDescriptorQuest data)
+    {
+        if (questId != 0)
+        {
+            for (int index = 0; index < Vanilla5875.QuestLogSlotCount; index++)
+            {
+                if (ReadQuestId(index) != questId)
+                    continue;
+
+                data = ReadDescriptorQuest(index);
+                return true;
+            }
+        }
+
+        data = default;
+        return false;
     }
 
     private static ulong GetSlotAddress(int index)

@@ -26,8 +26,7 @@ public struct QuestLogEntry
 
 /// <summary>
 /// Honorbuddy-compatible quest-log surface exposed by LocalPlayer.QuestLog.
-/// This first compatibility stage restores the original descriptor-backed read
-/// methods that can be implemented faithfully before QuestCacheEntry is ported.
+/// Build-specific 5875 descriptor access remains hidden in Vanilla5875QuestLogReader.
 /// </summary>
 public class QuestLog
 {
@@ -61,6 +60,33 @@ public class QuestLog
         return -1;
     }
 
+    /// <summary>
+    /// Matches Honorbuddy: returns all active PlayerQuest wrappers from the live log.
+    /// Original build 15595 iterated 25 slots; build 5875 has 20, which is the only
+    /// client-version-specific difference here.
+    /// </summary>
+    public List<PlayerQuest> GetAllQuests()
+    {
+        var quests = new List<PlayerQuest>();
+        for (uint index = 0; index < Vanilla5875.QuestLogSlotCount; index++)
+        {
+            PlayerQuest? quest = GetQuest(index);
+            if (quest is not null)
+                quests.Add(quest);
+        }
+        return quests;
+    }
+
+    /// <summary>
+    /// Matches Honorbuddy's GetQuest(uint index): index is a quest-log slot.
+    /// </summary>
+    public PlayerQuest? GetQuest(uint index)
+    {
+        ValidateIndex(index);
+        uint questId = GetQuestId(index);
+        return questId == 0 ? null : PlayerQuest.FromId(questId);
+    }
+
     public uint GetQuestId(uint index)
     {
         ValidateIndex(index);
@@ -69,6 +95,9 @@ public class QuestLog
 
     public bool ContainsQuest(uint questId)
         => questId != 0 && GetIndexForQuest(questId) >= 0;
+
+    public PlayerQuest? GetQuestById(uint questID)
+        => ContainsQuest(questID) ? PlayerQuest.FromId(questID) : null;
 
     public QuestLogEntry GetQuestInfo(int index)
     {
