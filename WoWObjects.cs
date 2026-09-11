@@ -1,5 +1,6 @@
 using Honorbuddy5875.Runtime;
 using Styx.Logic.Pathing;
+using Styx.Logic.Questing;
 
 namespace Styx.WoWInternals.WoWObjects;
 
@@ -243,8 +244,18 @@ public class WoWPlayer : WoWUnit
 
 public class LocalPlayer : WoWPlayer
 {
-    public LocalPlayer(uint baseAddress) : base(baseAddress) { }
-    internal LocalPlayer(uint baseAddress, ulong guid) : base(baseAddress, guid) { }
+    // Original Honorbuddy exposes QuestLog directly on LocalPlayer.
+    public QuestLog QuestLog;
+
+    public LocalPlayer(uint baseAddress) : base(baseAddress)
+    {
+        QuestLog = new QuestLog();
+    }
+
+    internal LocalPlayer(uint baseAddress, ulong guid) : base(baseAddress, guid)
+    {
+        QuestLog = new QuestLog();
+    }
 }
 
 public class WoWItem : WoWObject

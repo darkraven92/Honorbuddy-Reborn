@@ -21,6 +21,9 @@ internal static class Program
 
     private static int Main(string[] args)
     {
+        if (args.Any(a => string.Equals(a, "--quest-log-test", StringComparison.OrdinalIgnoreCase)))
+            return RunQuestLogTest();
+
         bool armed = args.Any(a => string.Equals(a, "--combat-routine-test", StringComparison.OrdinalIgnoreCase));
         UInputPlayerMover? mover = null;
         UInputClientTargeting? targetInput = null;
@@ -315,6 +318,68 @@ internal static class Program
             try { mover?.Dispose(); } catch { }
             try { targetInput?.Dispose(); } catch { }
             try { combatInput?.Dispose(); } catch { }
+            ObjectManager.Shutdown5875();
+        }
+    }
+
+    private static int RunQuestLogTest()
+    {
+        try
+        {
+            Console.WriteLine("Honorbuddy Reborn 1.12.1 - original QuestLog compatibility probe");
+            Console.WriteLine("----------------------------------------------------------------");
+
+            ObjectManager.Initialize5875();
+            LocalPlayer me = StyxWoW.Me
+                ?? throw new InvalidOperationException("LocalPlayer unavailable after initialization.");
+
+            Styx.Logic.Questing.QuestLog questLog = me.QuestLog;
+
+            Console.WriteLine($"PID:                 {ObjectManager.WoWProcess?.Id}");
+            Console.WriteLine($"Player:              {me.Race} class={me.ClassId} level={me.Level}");
+            Console.WriteLine($"QuestLog.QuestCount: {questLog.QuestCount}");
+            Console.WriteLine();
+            Console.WriteLine("Active quest-log slots");
+            Console.WriteLine("----------------------");
+
+            int active = 0;
+            for (uint index = 0; index < Vanilla5875.QuestLogSlotCount; index++)
+            {
+                uint id = questLog.GetQuestId(index);
+                if (id == 0)
+                    continue;
+
+                Styx.Logic.Questing.QuestLogEntry info =
+                    questLog.GetQuestInfo(checked((int)index));
+                int resolvedIndex = questLog.GetIndexForQuest(id);
+                bool contains = questLog.ContainsQuest(id);
+
+                Console.WriteLine(
+                    $"slot={index,2} id={id,-6} state={info.State,-10} " +
+                    $"objectives=[{string.Join(",", info.ObjectiveRequiredCounts)}] " +
+                    $"time={info.Time,-10} index={resolvedIndex,2} contains={contains}");
+                active++;
+            }
+
+            Console.WriteLine();
+            bool pass = active == questLog.QuestCount;
+            Console.WriteLine(pass
+                ? "QUESTLOG RESULT: PASS - Honorbuddy LocalPlayer.QuestLog reads the Vanilla 5875 descriptor slots."
+                : $"QUESTLOG RESULT: FAIL - enumerated {active} active slots but QuestCount reported {questLog.QuestCount}.");
+            Console.WriteLine("Input:                none");
+            Console.WriteLine("Memory writes:        none");
+            Console.WriteLine("Addon/chatlog bridge: none");
+            return pass ? 0 : 2;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine();
+            Console.Error.WriteLine("QUESTLOG RESULT: ERROR");
+            Console.Error.WriteLine(ex);
+            return 1;
+        }
+        finally
+        {
             ObjectManager.Shutdown5875();
         }
     }

@@ -35,6 +35,19 @@ internal static class Vanilla5875
     public const uint UnitDynamicFlags = 0x23C;
     public const uint UnitNpcFlags = 0x24C;
 
+    // WoW 1.12.1.5875 PLAYER_QUEST_LOG layout.
+    // Original Honorbuddy reaches this data through LocalPlayer.QuestLog;
+    // only this build-specific descriptor layout differs.
+    public const uint PlayerQuestLog1 = 0x318;
+    public const int QuestLogSlotCount = 20;
+    public const uint QuestLogSlotStride = 0x0C;
+    public const uint QuestLogCountStateOffset = 0x04;
+    public const uint QuestLogTimeOffset = 0x08;
+    public const uint QuestLogObjectiveCountMask = 0x00FF_FFFF;
+    public const int QuestLogStateShift = 24;
+    public const uint QuestLogObjectiveCounterMask = 0x3F;
+    public const int QuestLogObjectiveCounterBits = 6;
+
     public const uint UnitFlagNonAttackable = 0x0000_0002;
     public const uint UnitFlagPlayerControlled = 0x0000_0008;
     public const uint UnitFlagNotAttackable1 = 0x0000_0080;
