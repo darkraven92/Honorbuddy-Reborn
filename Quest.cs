@@ -1,13 +1,18 @@
 using Honorbuddy5875.Runtime;
+using Styx.WoWInternals.WoWCache;
 
 /// <summary>
-/// Quest cache record type used by Honorbuddy's Quest/PlayerQuest hierarchy.
-/// Step 2 restores the identity field required by the live player quest surface.
-/// The remaining cache-backed fields are restored when the original quest cache is ported.
+/// Original Honorbuddy global QuestCacheEntry type.
+/// Step 3 restores the cache identity used by Quest/PlayerQuest; remaining
+/// cache-backed text/reward fields are restored after the 5875 cache record
+/// payload is mapped.
 /// </summary>
 public struct QuestCacheEntry
 {
     public uint Id;
+
+    public override readonly string ToString()
+        => $"QuestCacheEntry(Id={Id})";
 }
 
 namespace Styx.Logic.Questing
@@ -35,8 +40,8 @@ namespace Styx.Logic.Questing
     }
 
     /// <summary>
-    /// Original Honorbuddy Quest base type. Step 2 restores the cache identity
-    /// required by PlayerQuest; text/reward metadata remains a quest-cache milestone.
+    /// Original Honorbuddy Quest base type. Its constructor receives the same
+    /// QuestCacheEntry returned by StyxWoW.Cache[CacheDb.Quest].
     /// </summary>
     public class Quest
     {
@@ -59,8 +64,9 @@ namespace Styx.Logic.Questing
     }
 
     /// <summary>
-    /// Original Honorbuddy live-player quest wrapper. Completion/failure/data are
-    /// resolved from the build-specific 5875 descriptor reader hidden below this API.
+    /// Original Honorbuddy live-player quest wrapper. The factory follows the
+    /// original cache chain: StyxWoW.Cache[Quest] -> GetInfoBlockById -> InfoBlock.Quest.
+    /// Live completion/failure state remains descriptor-backed.
     /// </summary>
     public class PlayerQuest : Quest
     {
@@ -94,7 +100,12 @@ namespace Styx.Logic.Questing
             if (questId == 0)
                 return null;
 
-            return new PlayerQuest(new QuestCacheEntry { Id = questId });
+            InfoBlock? info = Styx.StyxWoW.Cache[CacheDb.Quest].GetInfoBlockById(questId);
+            if (info is null)
+                return null;
+
+            QuestCacheEntry entry = info.Quest;
+            return entry.Id == 0 ? null : new PlayerQuest(entry);
         }
     }
 }

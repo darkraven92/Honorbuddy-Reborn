@@ -10,6 +10,7 @@ using Styx.Logic;
 using Styx.Logic.Pathing;
 using Styx.Logic.Profiles;
 using Styx.WoWInternals;
+using Styx.WoWInternals.WoWCache;
 using Styx.WoWInternals.WoWObjects;
 
 internal static class Program
@@ -21,6 +22,9 @@ internal static class Program
 
     private static int Main(string[] args)
     {
+        if (args.Any(a => string.Equals(a, "--quest-cache-test", StringComparison.OrdinalIgnoreCase)))
+            return RunQuestCacheTest();
+
         if (args.Any(a => string.Equals(a, "--quest-log-test", StringComparison.OrdinalIgnoreCase)))
             return RunQuestLogTest();
 
@@ -318,6 +322,110 @@ internal static class Program
             try { mover?.Dispose(); } catch { }
             try { targetInput?.Dispose(); } catch { }
             try { combatInput?.Dispose(); } catch { }
+            ObjectManager.Shutdown5875();
+        }
+    }
+
+    private static int RunQuestCacheTest()
+    {
+        try
+        {
+            Console.WriteLine("Honorbuddy Reborn 1.12.1 - original WoWCache quest identity compatibility probe");
+            Console.WriteLine("-------------------------------------------------------------------------------");
+
+            ObjectManager.Initialize5875();
+            LocalPlayer me = StyxWoW.Me
+                ?? throw new InvalidOperationException("LocalPlayer unavailable after initialization.");
+
+            Styx.Logic.Questing.QuestLog questLog = me.QuestLog;
+            Cache questCache = StyxWoW.Cache[CacheDb.Quest];
+            QuestCacheDiagnostics diagnostics = Vanilla5875QuestCache.GetDiagnostics();
+
+            Console.WriteLine($"PID:                    {ObjectManager.WoWProcess?.Id}");
+            Console.WriteLine($"Player:                 {me.Race} class={me.ClassId} level={me.Level}");
+            Console.WriteLine($"QuestLog.QuestCount:    {questLog.QuestCount}");
+            Console.WriteLine($"Quest cache file:       {diagnostics.Path ?? "<not found>"}");
+
+            if (diagnostics.IsValid5875QuestCache)
+            {
+                Console.WriteLine($"WDB signature:          {diagnostics.Signature}");
+                Console.WriteLine($"WDB build:              {diagnostics.Build}");
+                Console.WriteLine($"WDB locale:             {diagnostics.Locale}");
+                Console.WriteLine($"WDB records:            {diagnostics.RecordCount}");
+            }
+            else
+            {
+                Console.WriteLine($"WDB status:             unavailable ({diagnostics.Error ?? "unknown error"})");
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("Original Honorbuddy cache chain");
+            Console.WriteLine("-------------------------------");
+            Console.WriteLine("StyxWoW.Cache -> WoWCache[CacheDb.Quest] -> Cache.GetInfoBlockById -> InfoBlock.Quest");
+            Console.WriteLine();
+
+            int active = 0;
+            bool allValid = true;
+            for (uint index = 0; index < Vanilla5875.QuestLogSlotCount; index++)
+            {
+                uint id = questLog.GetQuestId(index);
+                if (id == 0)
+                    continue;
+
+                InfoBlock? block = questCache.GetInfoBlockById(id);
+                QuestCacheEntry entry = block?.Quest ?? default;
+                Styx.Logic.Questing.PlayerQuest? playerQuest = questLog.GetQuestById(id);
+                bool persisted = Vanilla5875QuestCache.ContainsPersistedRecord(id);
+                string source = persisted ? "WDB" : "live-identity";
+
+                bool valid =
+                    block is not null &&
+                    block.Id == id &&
+                    entry.Id == id &&
+                    playerQuest is not null &&
+                    playerQuest.Id == id;
+
+                allValid &= valid;
+                Console.WriteLine(
+                    $"slot={index,2} id={id,-6} cache={(block is not null),-5} " +
+                    $"InfoBlock.Id={block?.Id ?? 0,-6} QuestCacheEntry.Id={entry.Id,-6} " +
+                    $"PlayerQuest.Id={playerQuest?.Id ?? 0,-6} source={source,-13} valid={valid}");
+                active++;
+            }
+
+            Console.WriteLine();
+            bool pass =
+                active > 0 &&
+                active == questLog.QuestCount &&
+                allValid;
+
+            Console.WriteLine(pass
+                ? "QUEST CACHE STEP 3 RESULT: PASS - original StyxWoW.Cache -> Cache -> InfoBlock -> QuestCacheEntry chain resolves live PlayerQuest IDs on build 5875."
+                : "QUEST CACHE STEP 3 RESULT: FAIL - Honorbuddy cache-chain invariants did not hold.");
+            Console.WriteLine("Public cache model:     StyxWoW.Cache -> WoWCache -> Cache -> InfoBlock -> QuestCacheEntry");
+            Console.WriteLine("Build-specific layer:   Vanilla5875QuestCache (internal)");
+            Console.WriteLine("Input:                  none");
+            Console.WriteLine("Memory writes:          none");
+            Console.WriteLine("Addon/chatlog bridge:   none");
+
+            if (!diagnostics.IsValid5875QuestCache)
+            {
+                Console.WriteLine();
+                Console.WriteLine("Note: the live quest identity fallback preserves original PlayerQuest behavior until");
+                Console.WriteLine("the Vanilla client has flushed questcache.wdb. No alternate public API is exposed.");
+            }
+
+            return pass ? 0 : 2;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine();
+            Console.Error.WriteLine("QUEST CACHE STEP 3 RESULT: ERROR");
+            Console.Error.WriteLine(ex);
+            return 1;
+        }
+        finally
+        {
             ObjectManager.Shutdown5875();
         }
     }
