@@ -1,4 +1,3 @@
-using System.Text;
 using Styx.Logic.Questing;
 using Styx.WoWInternals;
 
@@ -16,15 +15,12 @@ namespace Honorbuddy5875.Runtime;
 /// </summary>
 internal static class Vanilla5875QuestCache
 {
-    private const int HeaderSize = 20;
-    private const string QuestSignatureOnDisk = "TSQW";
-
     private static readonly object Sync = new();
     private static string? _path;
     private static long _length = -1;
     private static DateTime _writeTimeUtc = DateTime.MinValue;
     private static QuestCacheDiagnostics _diagnostics;
-    private static Dictionary<uint, QuestCacheRecord> _records = new();
+    private static Dictionary<uint, QuestCacheEntry> _records = new();
 
     public static bool TryGetQuestEntry(uint questId, out QuestCacheEntry entry)
     {
@@ -37,9 +33,8 @@ internal static class Vanilla5875QuestCache
         EnsureLoaded();
         lock (Sync)
         {
-            if (_records.ContainsKey(questId))
+            if (_records.TryGetValue(questId, out entry))
             {
-                entry = new QuestCacheEntry { Id = questId };
                 return true;
             }
         }
@@ -90,7 +85,7 @@ internal static class Vanilla5875QuestCache
                 _path = null;
                 _length = -1;
                 _writeTimeUtc = DateTime.MinValue;
-                _records = new Dictionary<uint, QuestCacheRecord>();
+                _records = new Dictionary<uint, QuestCacheEntry>();
                 _diagnostics = new QuestCacheDiagnostics(
                     Path: null,
                     Signature: string.Empty,
@@ -124,65 +119,14 @@ internal static class Vanilla5875QuestCache
 
     private static void Load(string path, long length, DateTime writeTimeUtc)
     {
-        var records = new Dictionary<uint, QuestCacheRecord>();
+        var records = new Dictionary<uint, QuestCacheEntry>();
         QuestCacheDiagnostics diagnostics;
 
         try
         {
-            using var stream = new FileStream(
-                path,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.ReadWrite | FileShare.Delete);
-            using var reader = new BinaryReader(stream, Encoding.ASCII, leaveOpen: false);
-
-            if (stream.Length < HeaderSize)
-                throw new InvalidDataException($"Quest cache is shorter than the {HeaderSize}-byte Vanilla header.");
-
-            string signature = Encoding.ASCII.GetString(reader.ReadBytes(4));
-            uint build = reader.ReadUInt32();
-            string localeRaw = Encoding.ASCII.GetString(reader.ReadBytes(4));
-            uint internalRecordSize = reader.ReadUInt32();
-            uint recordVersion = reader.ReadUInt32();
-            string locale = ReverseAscii(localeRaw);
-
-            if (!string.Equals(signature, QuestSignatureOnDisk, StringComparison.Ordinal))
-                throw new InvalidDataException($"Unexpected quest-cache signature '{signature}', expected '{QuestSignatureOnDisk}'.");
-            if (build != 5875)
-                throw new InvalidDataException($"Quest cache belongs to client build {build}, expected 5875.");
-
-            while (stream.Position + 8 <= stream.Length)
-            {
-                long recordHeaderOffset = stream.Position;
-                uint id = reader.ReadUInt32();
-                uint dataLength = reader.ReadUInt32();
-
-                if (id == 0 && dataLength == 0)
-                    break;
-
-                if (id == 0)
-                    throw new InvalidDataException($"Quest cache contains a zero ID at file offset 0x{recordHeaderOffset:X}.");
-
-                long dataOffset = stream.Position;
-                long end = dataOffset + dataLength;
-                if (end < dataOffset || end > stream.Length)
-                    throw new InvalidDataException(
-                        $"Quest {id} record length {dataLength} exceeds the WDB file at offset 0x{recordHeaderOffset:X}.");
-
-                records[id] = new QuestCacheRecord(id, dataOffset, dataLength);
-                stream.Position = end;
-            }
-
-            diagnostics = new QuestCacheDiagnostics(
-                Path: path,
-                Signature: signature,
-                Build: build,
-                Locale: locale,
-                InternalRecordSize: internalRecordSize,
-                RecordVersion: recordVersion,
-                RecordCount: records.Count,
-                IsValid5875QuestCache: true,
-                Error: null);
+            Vanilla5875QuestCacheFile file = Vanilla5875QuestCacheReader.ReadFile(path);
+            records = file.Entries;
+            diagnostics = file.Diagnostics;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
         {
@@ -266,14 +210,6 @@ internal static class Vanilla5875QuestCache
             .FirstOrDefault();
     }
 
-    private static string ReverseAscii(string value)
-    {
-        char[] chars = value.ToCharArray();
-        Array.Reverse(chars);
-        return new string(chars).TrimEnd('\0');
-    }
-
-    private readonly record struct QuestCacheRecord(uint Id, long DataOffset, uint DataLength);
 }
 
 internal readonly record struct QuestCacheDiagnostics(

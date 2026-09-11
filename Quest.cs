@@ -3,13 +3,13 @@ using Styx.WoWInternals.WoWCache;
 
 /// <summary>
 /// Original Honorbuddy global QuestCacheEntry type.
-/// Step 3 restores the cache identity used by Quest/PlayerQuest; remaining
-/// cache-backed text/reward fields are restored after the 5875 cache record
-/// payload is mapped.
+/// Managed compatibility value, not a binary overlay of the original structure.
+/// The build-specific payload remains internal.
 /// </summary>
 public struct QuestCacheEntry
 {
     public uint Id;
+    internal Vanilla5875QuestData? Data;
 
     public override readonly string ToString()
         => $"QuestCacheEntry(Id={Id})";
@@ -52,13 +52,43 @@ namespace Styx.Logic.Questing
             _internalInfo = entry;
         }
 
-        public uint Id => InternalInfo.Id;
+        public uint Id => _internalInfo.Id;
 
         public QuestCacheEntry InternalInfo
         {
-            get => _internalInfo;
+            get
+            {
+                // Promote an identity-only wrapper after the client flushes its WDB.
+                // Already populated wrappers are snapshots, like their cache value.
+                if (_internalInfo.Data is null &&
+                    Vanilla5875QuestCache.TryGetQuestEntry(_internalInfo.Id, out var latest) &&
+                    latest.Data is not null)
+                    _internalInfo = latest;
+                return _internalInfo;
+            }
             protected set => _internalInfo = value;
         }
+
+        private Vanilla5875QuestData Data => InternalInfo.Data ??
+            throw new InvalidOperationException(
+                $"Quest {_internalInfo.Id} has live identity only; its build-5875 WDB metadata is unavailable. " +
+                "Close WoW normally to flush the cache, then reopen WoW and retry.");
+
+        public string Name => Data.Title;
+        public string Description => Data.Details;
+        public string[] Objectives => (string[])Data.ObjectiveTexts.Clone();
+        public int Level => Data.Level;
+        public uint NextQuestId => Data.NextQuestId;
+        public int[] CollectItemIDs => (int[])Data.ItemIds.Clone();
+        public int[] CollectItemCounts => (int[])Data.ItemCounts.Clone();
+        // Preserve the client field's bits. GameObject IDs have bit 31 set;
+        // consumers must not interpret such a value as a creature entry.
+        public int[] NormalObjectiveIDs => (int[])Data.ObjectiveIds.Clone();
+        public int[] NormalObjectiveRequiredCounts => (int[])Data.ObjectiveCounts.Clone();
+        // The wire field is signed: a negative amount is a cost, not a reward.
+        public uint RewardMoney => (uint)Math.Max(0, Data.RewardOrRequiredMoney);
+        public uint RewardMoneyAtMaxLevel => Data.RewardMoneyAtMaxLevel;
+        public int RewardSpellId => Data.RewardSpellId;
 
         public override string ToString() => $"Quest({Id})";
     }
