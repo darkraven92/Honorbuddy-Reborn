@@ -1,0 +1,4 @@
+Build: net10.0 / SDK 10.0.401; 0 warnings, 0 errors.
+TURN-IN STEP 6 SELF TEST: PASS (24 checks)
+QUEST ORDER STEP 5 SELF TEST: PASS (21 checks)
+Live NPC resolution and real uinput movement: not run here.

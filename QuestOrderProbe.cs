@@ -20,7 +20,8 @@ internal static class QuestOrderProbe
                 profile.QuestOrder[1] is not TurnInNode turn || objective.QuestId != turn.QuestId)
                 throw new InvalidDataException("This probe expects an Objective followed by TurnIn for the same quest.");
             ObjectManager.Initialize5875();
-            bot = new QuestBot { MovementExecutionEnabled = false, ClientTargetSyncEnabled = false };
+            bot = new QuestBot { MovementExecutionEnabled = false, ClientTargetSyncEnabled = false,
+                ResolveQuestGiverLocations = false }; // Preserve the step-5 selection-only probe.
             bot.Start();
             bot.Root.Start(null);
             bot.Root.Tick(null);
@@ -80,7 +81,7 @@ internal static class QuestOrderProbe
                 new(true, completed, failed, [3098, 0, 0, 0], [10, 0, 0, 0], [(ushort)done, 0, 0, 0]);
             QuestOrderSnapshot state = State(0);
             int reads = 0;
-            var bot = new QuestBot(_ => { reads++; return state; });
+            var bot = new QuestBot(_ => { reads++; return state; }) { ResolveQuestGiverLocations = false };
             void Restart(string order)
             {
                 Profile(order);

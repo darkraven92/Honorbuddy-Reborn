@@ -22,6 +22,13 @@ internal static class Program
 
     private static int Main(string[] args)
     {
+        if (args.Any(a => string.Equals(a, "--turn-in-self-test", StringComparison.OrdinalIgnoreCase)))
+            return TurnInApproachProbe.RunSelfTest();
+        int approachTest = Array.FindIndex(args, a => string.Equals(a, "--turn-in-approach-test", StringComparison.OrdinalIgnoreCase));
+        if (approachTest >= 0)
+            return TurnInApproachProbe.Run(approachTest + 1 < args.Length ? args[approachTest + 1] : null,
+                args.Any(a => string.Equals(a, "--execute", StringComparison.OrdinalIgnoreCase)));
+
         if (args.Any(a => string.Equals(a, "--quest-order-self-test", StringComparison.OrdinalIgnoreCase)))
             return QuestOrderProbe.RunSelfTest();
         int orderTest = Array.FindIndex(args, a => string.Equals(a, "--quest-order-test", StringComparison.OrdinalIgnoreCase));

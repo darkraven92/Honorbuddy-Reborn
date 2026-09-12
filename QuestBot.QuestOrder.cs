@@ -63,6 +63,8 @@ public sealed partial class QuestBot
         {
             _questOrderProfile = profile;
             _profileNodeIndex = 0;
+            _turnInNpcGuid = 0;
+            _turnInNpc = null;
         }
         if (profile.QuestOrder.Count == 0) return false;
         var snapshots = new Dictionary<uint, QuestOrderSnapshot>();
@@ -124,6 +126,8 @@ public sealed partial class QuestBot
                 if (!state.Completed)
                     return SetQuestOrderDecision(QuestDecisionKind.QuestStateBlocked,
                         $"TurnIn quest={turn.QuestId}: live IsCompleted is false; node retained.", turn.TurnInId);
+                if (ResolveQuestGiverLocations)
+                    return EvaluateTurnInLocation(turn);
                 return SetQuestOrderDecision(QuestDecisionKind.TurnInReady,
                     $"TurnIn ready: quest={turn.QuestId} npc={turn.TurnInId}; interaction is not implemented; node retained.",
                     turn.TurnInId);
@@ -140,6 +144,8 @@ public sealed partial class QuestBot
 
     private bool SetQuestOrderDecision(QuestDecisionKind kind, string description, uint entry = 0)
     {
+        _turnInNpc = null;
+        _turnInNpcGuid = 0;
         CurrentDecision = new(kind, description, Entry: entry);
         TreeRoot.StatusText = description;
         return true;

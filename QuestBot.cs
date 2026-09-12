@@ -23,7 +23,10 @@ public enum QuestDecisionKind
     ObjectiveInProgress,
     QuestStateBlocked,
     ProfileComplete,
-    TurnInReady
+    TurnInReady,
+    QuestGiverUnavailable,
+    MoveToQuestGiver,
+    QuestGiverInRange
 }
 
 public enum QuestFlowState
@@ -128,6 +131,8 @@ public sealed partial class QuestBot : BotBase
     {
         _profileNodeIndex = 0;
         _questOrderProfile = null;
+        _turnInNpcGuid = 0;
+        _turnInNpc = null;
         _activeHotspot = null;
         _stickyTargetGuid = 0;
         _releasedTargetGuids.Clear();
@@ -342,7 +347,8 @@ public sealed partial class QuestBot : BotBase
 
         // Waiting for quest data or interaction is not a navigation stall.
         if (CurrentDecision.Kind is not (QuestDecisionKind.AcquireTarget or
-            QuestDecisionKind.MoveToHotspot or QuestDecisionKind.MoveToProfileLocation))
+            QuestDecisionKind.MoveToHotspot or QuestDecisionKind.MoveToProfileLocation or
+            QuestDecisionKind.MoveToQuestGiver))
         {
             Navigator.Clear();
             ResetProgressTracking();
@@ -385,6 +391,12 @@ public sealed partial class QuestBot : BotBase
         if (CurrentDecision.Kind == QuestDecisionKind.AcquireTarget)
         {
             ExecuteTargetApproach(me);
+            return;
+        }
+
+        if (CurrentDecision.Kind == QuestDecisionKind.MoveToQuestGiver)
+        {
+            ExecuteQuestGiverApproach();
             return;
         }
 
