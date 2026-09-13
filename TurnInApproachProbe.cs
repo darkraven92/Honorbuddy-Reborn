@@ -23,9 +23,7 @@ internal static class TurnInApproachProbe
                 throw new ArgumentException("Usage: --turn-in-approach-test QuestOrderStep5/CuttingTeeth.xml [--execute]");
             ProfileManager.LoadNew(path, false);
             var order = ProfileManager.CurrentProfile.QuestOrder;
-            if (order.Count != 2 || order[0] is not ObjectiveNode objective || order[1] is not TurnInNode turn ||
-                objective.QuestId != turn.QuestId)
-                throw new InvalidDataException("This probe requires Objective -> TurnIn for the same quest.");
+            TurnInProbeProfile.Validate(order);
             ObjectManager.Initialize5875();
             bot = new QuestBot { MovementExecutionEnabled = false, ClientTargetSyncEnabled = false,
                 MaximumMovementDisplacement = 30, NoProgressTimeout = TimeSpan.FromSeconds(4) };

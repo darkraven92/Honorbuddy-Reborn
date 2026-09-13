@@ -22,6 +22,45 @@ internal static class Program
 
     private static int Main(string[] args)
     {
+        if (args.Any(a => string.Equals(a, "--quest-reward-accept-self-test", StringComparison.OrdinalIgnoreCase)))
+            return QuestRewardAcceptSelfTest.Run();
+        int acceptTest = Array.FindIndex(args, a => string.Equals(a, "--quest-reward-accept-test", StringComparison.OrdinalIgnoreCase));
+        if (acceptTest >= 0)
+        {
+            int layoutArg = Array.FindIndex(args, a => string.Equals(a, "--keyboard-layout", StringComparison.OrdinalIgnoreCase));
+            return QuestRewardAcceptProbe.Run(acceptTest + 1 < args.Length ? args[acceptTest + 1] : null,
+                args.Any(a => string.Equals(a, "--execute", StringComparison.OrdinalIgnoreCase)),
+                layoutArg >= 0 && layoutArg + 1 < args.Length ? args[layoutArg + 1] : null);
+        }
+        if (args.Any(a => string.Equals(a, "--quest-reward-dialog-self-test", StringComparison.OrdinalIgnoreCase)))
+            return QuestRewardDialogSelfTest.Run();
+        int rewardDialogTest = Array.FindIndex(args, a => string.Equals(a, "--quest-reward-dialog-test", StringComparison.OrdinalIgnoreCase));
+        if (rewardDialogTest >= 0)
+        {
+            int layoutArg = Array.FindIndex(args, a => string.Equals(a, "--keyboard-layout", StringComparison.OrdinalIgnoreCase));
+            return QuestRewardDialogProbe.Run(rewardDialogTest + 1 < args.Length ? args[rewardDialogTest + 1] : null,
+                args.Any(a => string.Equals(a, "--execute", StringComparison.OrdinalIgnoreCase)),
+                layoutArg >= 0 && layoutArg + 1 < args.Length ? args[layoutArg + 1] : null);
+        }
+
+        if (args.Any(a => string.Equals(a, "--gossip-select-self-test", StringComparison.OrdinalIgnoreCase)))
+            return GossipSelectionProbe.RunSelfTest();
+        int gossipTest = Array.FindIndex(args, a => string.Equals(a, "--gossip-select-test", StringComparison.OrdinalIgnoreCase));
+        if (gossipTest >= 0)
+        {
+            int layoutArg = Array.FindIndex(args, a => string.Equals(a, "--keyboard-layout", StringComparison.OrdinalIgnoreCase));
+            return GossipSelectionProbe.Run(gossipTest + 1 < args.Length ? args[gossipTest + 1] : null,
+                args.Any(a => string.Equals(a, "--execute", StringComparison.OrdinalIgnoreCase)),
+                layoutArg >= 0 && layoutArg + 1 < args.Length ? args[layoutArg + 1] : null);
+        }
+
+        if (args.Any(a => string.Equals(a, "--turn-in-interaction-self-test", StringComparison.OrdinalIgnoreCase)))
+            return TurnInInteractionProbe.RunSelfTest();
+        int interactionTest = Array.FindIndex(args, a => string.Equals(a, "--turn-in-interaction-test", StringComparison.OrdinalIgnoreCase));
+        if (interactionTest >= 0)
+            return TurnInInteractionProbe.Run(interactionTest + 1 < args.Length ? args[interactionTest + 1] : null,
+                args.Any(a => string.Equals(a, "--execute", StringComparison.OrdinalIgnoreCase)));
+
         if (args.Any(a => string.Equals(a, "--turn-in-self-test", StringComparison.OrdinalIgnoreCase)))
             return TurnInApproachProbe.RunSelfTest();
         int approachTest = Array.FindIndex(args, a => string.Equals(a, "--turn-in-approach-test", StringComparison.OrdinalIgnoreCase));

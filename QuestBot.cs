@@ -129,6 +129,7 @@ public sealed partial class QuestBot : BotBase
 
     public override void Start()
     {
+        _rewardAttempt = null;
         _profileNodeIndex = 0;
         _questOrderProfile = null;
         _turnInNpcGuid = 0;
@@ -176,7 +177,7 @@ public sealed partial class QuestBot : BotBase
             : "Evaluating patrol/client-target profile on WoW 1.12.1.5875";
     }
 
-    public override void Stop() => Navigator.Clear();
+    public override void Stop() { _rewardAttempt = null; Navigator.Clear(); }
     public override void Pulse() => PulseCalls++;
     public void EvaluateNow() => EvaluateDecision();
 

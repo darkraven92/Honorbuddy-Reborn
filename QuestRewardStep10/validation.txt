@@ -1,0 +1,9 @@
+Step 10 XP-base hotfix validation
+.NET SDK 10.0.401, net10.0. Build: 0 warnings, 0 errors.
+Reward acceptance self-test: PASS, 68 checks, now using correct full-descriptor XP offsets and poisoned old offsets.
+Reward dialog regression self-test: PASS, 46 checks.
+Total exercised for this hotfix: 114 checks. No live input or game session.
+Static base derivation: object field initialization -> unit initialization -> player initialization (+2F0) -> UnitXP (+840) and UnitXPMax (+844).
+Result: full-descriptor XP B30, next-XP B34; snapshot length B38.
+Live validation of the correction is still required.
+The previous step 10 tests incorrectly shared the implementation's relative-offset assumption.

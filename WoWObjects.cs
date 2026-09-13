@@ -53,6 +53,9 @@ public class WoWObject
         ? double.PositiveInfinity
         : Location.Distance2DSqr(Styx.StyxWoW.Me.Location);
 
+    // Original public entry point; the build-specific input adapter must be explicitly armed.
+    public void Interact() => Honorbuddy5875.Runtime.Vanilla5875Interaction.Interact(this);
+
     public virtual float InteractRange => 4.0f;
     public float InteractRangeSqr => InteractRange * InteractRange;
     public bool WithinInteractRange => DistanceSqr < InteractRangeSqr;

@@ -1,0 +1,91 @@
+{
+  "sha256": "b4756d38ef207c02ed651f4952bd89a70b4857b73a33413339e1b285b28d2dc7",
+  "image_base": 4194304,
+  "anchors": [
+    {
+      "va": "0x501a20",
+      "bytes": "ba00f9bd00",
+      "meaning": "GetTitleText / title buffer"
+    },
+    {
+      "va": "0x515ba5",
+      "bytes": "6a0968e00c850056e80e49130085c07536a1cce2b4008b0dc8e2b4006a625051ba8c0c8500b90800000083c609e88928f5ff",
+      "meaning": "mouseover Lua unit name / GUID"
+    },
+    {
+      "va": "0x501201",
+      "bytes": "89351008be0089351408be00",
+      "meaning": "CloseQuest clears NPC GUID"
+    },
+    {
+      "va": "0x500d68",
+      "bytes": "893d1808be0089351c08be00e85723f9ff8b430c8b5308a31408be0033c089151008be00a32808be00a3",
+      "meaning": "dialog mode, quest ID, NPC GUID, request flag assignment"
+    },
+    {
+      "va": "0x501380",
+      "bytes": "833d1808be0001",
+      "meaning": "AcceptQuest requires mode 1"
+    },
+    {
+      "va": "0x501560",
+      "bytes": "833d1808be0002",
+      "meaning": "CompleteQuest requires mode 2"
+    },
+    {
+      "va": "0x5015b0",
+      "bytes": "833d1808be0003",
+      "meaning": "GetQuestReward requires mode 3"
+    },
+    {
+      "va": "0x501b52",
+      "bytes": "8b0d3808be00483bc173186bc04c0598e6bd008bd08bce",
+      "meaning": "active greeting count, stride, title"
+    },
+    {
+      "va": "0x50135e",
+      "bytes": "681008be00",
+      "meaning": "active greeting select uses quest NPC GUID"
+    },
+    {
+      "va": "0x4e2580",
+      "bytes": "33c033c98b91c074bb0085d2741f8b91c874bb0083fa03740583fa0475014081c10c02000081f98041000072d7c3",
+      "meaning": "gossip active count; statuses 3/4; stride/capacity"
+    },
+    {
+      "va": "0x4e1fa0",
+      "bytes": "8b15583fbc00568bf18b063bc28b4e0475083b0d5c3fbc0074450bc1752332d2b9583fbc00e8f611fbff33c0a3583fbc00a35c3fbc00b92b0100005ee96f1e2200a148b6bb00508bcee8e210fbff8b0e890d583fbc008b560489155c3fbc005e",
+      "meaning": "gossip session GUID set/clear"
+    },
+    {
+      "va": "0x4e27a0",
+      "bytes": "8d4ff8518bcee88566f3ff578bcee87d66f3ff8d57fc528bcee87266f3ff68000200008d4704508bcee8e269f3ff8b45f84381c70c0200003bd87cc48b4d",
+      "meaning": "gossip entry fields and 512-byte string"
+    },
+    {
+      "va": "0x4e2b03",
+      "bytes": "ba010000008bcee8110b2100e89c77f2ff8bc849e8e4faffff33c05ec3",
+      "meaning": "Lua selector numeric argument and decrement before dispatch"
+    },
+    {
+      "va": "0x4e2620",
+      "bytes": "33f68b86c074bb0085c074678b86c874bb0083f803740583f80475493b7dfc75436890000000e8055ff8ff5250bab4648300b910000000e8045ef8ff85c074248b0d583fbc008b155c3fbc00894df08b8ec074bb008955f4518d55f0528bc8e81c8610004781c60c020000",
+      "meaning": "active-status filtering and selected quest/NPC request"
+    },
+    {
+      "va": "0x501d70",
+      "bytes": "e8ebf7ffff33c0c39090909090909090",
+      "meaning": "Native CompleteQuest registration target calls progress continuation"
+    },
+    {
+      "va": "0x501560",
+      "bytes": "833d1808be00027545a14408be0085c0753c6890000000e8d46ff6ff5250bab4648300b910000000e8d36ef6ff85c0741d8b0d1c08be0051681008be008bc8e88c970e00c7054408be0001000000c390",
+      "meaning": "Requires mode 2 and no pending request; requests reward offer"
+    },
+    {
+      "va": "0x501d40",
+      "bytes": "568bf1e8e8f4ffff85c08bce7413680000f03f6a00e8b61a1f00b8010000005ec3e88a1a1f00b8010000005e",
+      "meaning": "Native IsQuestCompletable Lua wrapper invokes current requirements check"
+    }
+  ]
+}

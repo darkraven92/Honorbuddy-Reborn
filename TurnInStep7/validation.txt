@@ -1,0 +1,9 @@
+Build: .NET SDK 10.0.100, target net10.0; 0 warnings, 0 errors.
+TURN-IN STEP 7 SELF TEST: PASS (20 checks; synthetic conversation buffers, no live client/input)
+
+TURN-IN STEP 6 SELF TEST: PASS (24 checks; NPC selection and QuestBot root decisions)
+
+QUEST ORDER STEP 5 SELF TEST: PASS (21 checks; actual QuestBot root ticks with internal test snapshots)
+
+Live client read and uinput right click: NOT RUN here; require the user live probe.
+CLIENT STATIC EVIDENCE: PASS (SHA-256 and 12 anchors in supplied WoW.exe).

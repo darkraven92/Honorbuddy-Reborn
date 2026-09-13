@@ -1,0 +1,6 @@
+<HBProfile>
+  <Name>Simple Parchment - TurnIn to Frang</Name>
+  <QuestOrder>
+    <TurnIn QuestName="Simple Parchment" QuestId="2383" TurnInName="Frang" TurnInId="3153" />
+  </QuestOrder>
+</HBProfile>

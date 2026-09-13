@@ -81,7 +81,7 @@ internal sealed class UInputKeyboard : IDisposable
     private int _fd = -1;
     private bool _created;
 
-    public UInputKeyboard()
+    public UInputKeyboard(bool mouse = false, IEnumerable<ushort>? extraKeys = null)
     {
         _fd = Native.open(DevicePath, O_WRONLY | O_NONBLOCK);
         if (_fd < 0)
@@ -91,7 +91,14 @@ internal sealed class UInputKeyboard : IDisposable
         {
             IoctlInt(UI_SET_EVBIT, EV_SYN, "UI_SET_EVBIT(EV_SYN)");
             IoctlInt(UI_SET_EVBIT, EV_KEY, "UI_SET_EVBIT(EV_KEY)");
-            foreach (ushort code in new ushort[] { 1, 15, 16, 17, 18, 20, 30, 31, 32, 46, 57 })
+            if (mouse)
+            {
+                IoctlInt(UI_SET_EVBIT, 2, "UI_SET_EVBIT(EV_REL)");
+                IoctlInt(0x40045566, 0, "UI_SET_RELBIT(REL_X)");
+                IoctlInt(0x40045566, 1, "UI_SET_RELBIT(REL_Y)");
+            }
+            foreach (ushort code in (mouse ? new ushort[] { 0x110, 0x111 } : new ushort[] { 1, 15, 16, 17, 18, 20, 30, 31, 32, 46, 57 })
+                .Concat(extraKeys ?? []).Distinct())
                 IoctlInt(UI_SET_KEYBIT, code, $"UI_SET_KEYBIT({code})");
 
             UInputSetup setup = new()
@@ -103,7 +110,7 @@ internal sealed class UInputKeyboard : IDisposable
                     Product = 0x5875,
                     Version = 1
                 },
-                Name = "Honorbuddy5875 Virtual Keyboard",
+                Name = mouse ? "Honorbuddy5875 Virtual Mouse" : "Honorbuddy5875 Virtual Keyboard",
                 FfEffectsMax = 0
             };
 
@@ -128,8 +135,8 @@ internal sealed class UInputKeyboard : IDisposable
         if (down == isHeld) return;
 
         WriteEvent(EV_KEY, code, down ? 1 : 0);
-        WriteEvent(EV_SYN, SYN_REPORT, 0);
         if (down) _held.Add(code); else _held.Remove(code);
+        WriteEvent(EV_SYN, SYN_REPORT, 0);
     }
 
     public void ReleaseAll()
@@ -145,9 +152,12 @@ internal sealed class UInputKeyboard : IDisposable
     {
         if (_fd < 0) throw new ObjectDisposedException(nameof(UInputKeyboard));
         if (holdMilliseconds < 1) holdMilliseconds = 1;
-        SetKey(code, true);
-        Thread.Sleep(holdMilliseconds);
-        SetKey(code, false);
+        try
+        {
+            SetKey(code, true);
+            Thread.Sleep(holdMilliseconds);
+        }
+        finally { SetKey(code, false); }
     }
 
 

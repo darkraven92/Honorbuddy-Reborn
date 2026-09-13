@@ -1,0 +1,9 @@
+Build: .NET SDK 10.0.100; net10.0; 0 warnings, 0 errors.
+QUEST REWARD STEP 9 SELF TEST: PASS (46 checks; bounded dialog flow, TurnIn-only root, guarded input and cancellation; no live input)
+GOSSIP STEP 8 SELF TEST: PASS (51 checks; list identity/index, public API, keyboard sequencing and cancellation; no live input)
+TURN-IN STEP 7 SELF TEST: PASS (20 checks; synthetic conversation buffers, no live client/input)
+TURN-IN STEP 6 SELF TEST: PASS (24 checks; NPC selection and QuestBot root decisions)
+QUEST ORDER STEP 5 SELF TEST: PASS (21 checks; actual QuestBot root ticks with internal test snapshots)
+Live quest 2383 continuation through Wine/uinput: NOT RUN here; requires the user execute probe.
+CLIENT STATIC EVIDENCE: PASS (SHA-256 and 17 instruction anchors).
+ORIGINAL API EVIDENCE: PASS (ClickContinue/CompleteQuest strings statically decoded from supplied Honorbuddy.exe).

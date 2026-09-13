@@ -1,0 +1,166 @@
+{
+  "sha256": "b4756d38ef207c02ed651f4952bd89a70b4857b73a33413339e1b285b28d2dc7",
+  "image_base": 4194304,
+  "anchors": [
+    {
+      "va": "0x501a20",
+      "bytes": "ba00f9bd00",
+      "meaning": "GetTitleText / title buffer"
+    },
+    {
+      "va": "0x515ba5",
+      "bytes": "6a0968e00c850056e80e49130085c07536a1cce2b4008b0dc8e2b4006a625051ba8c0c8500b90800000083c609e88928f5ff",
+      "meaning": "mouseover Lua unit name / GUID"
+    },
+    {
+      "va": "0x501201",
+      "bytes": "89351008be0089351408be00",
+      "meaning": "CloseQuest clears NPC GUID"
+    },
+    {
+      "va": "0x500d68",
+      "bytes": "893d1808be0089351c08be00e85723f9ff8b430c8b5308a31408be0033c089151008be00a32808be00a3",
+      "meaning": "dialog mode, quest ID, NPC GUID, request flag assignment"
+    },
+    {
+      "va": "0x501380",
+      "bytes": "833d1808be0001",
+      "meaning": "AcceptQuest requires mode 1"
+    },
+    {
+      "va": "0x501560",
+      "bytes": "833d1808be0002",
+      "meaning": "CompleteQuest requires mode 2"
+    },
+    {
+      "va": "0x5015b0",
+      "bytes": "833d1808be0003",
+      "meaning": "GetQuestReward requires mode 3"
+    },
+    {
+      "va": "0x501b52",
+      "bytes": "8b0d3808be00483bc173186bc04c0598e6bd008bd08bce",
+      "meaning": "active greeting count, stride, title"
+    },
+    {
+      "va": "0x50135e",
+      "bytes": "681008be00",
+      "meaning": "active greeting select uses quest NPC GUID"
+    },
+    {
+      "va": "0x4e2580",
+      "bytes": "33c033c98b91c074bb0085d2741f8b91c874bb0083fa03740583fa0475014081c10c02000081f98041000072d7c3",
+      "meaning": "gossip active count; statuses 3/4; stride/capacity"
+    },
+    {
+      "va": "0x4e1fa0",
+      "bytes": "8b15583fbc00568bf18b063bc28b4e0475083b0d5c3fbc0074450bc1752332d2b9583fbc00e8f611fbff33c0a3583fbc00a35c3fbc00b92b0100005ee96f1e2200a148b6bb00508bcee8e210fbff8b0e890d583fbc008b560489155c3fbc005e",
+      "meaning": "gossip session GUID set/clear"
+    },
+    {
+      "va": "0x4e27a0",
+      "bytes": "8d4ff8518bcee88566f3ff578bcee87d66f3ff8d57fc528bcee87266f3ff68000200008d4704508bcee8e269f3ff8b45f84381c70c0200003bd87cc48b4d",
+      "meaning": "gossip entry fields and 512-byte string"
+    },
+    {
+      "va": "0x4e2b03",
+      "bytes": "ba010000008bcee8110b2100e89c77f2ff8bc849e8e4faffff33c05ec3",
+      "meaning": "Lua selector numeric argument and decrement before dispatch"
+    },
+    {
+      "va": "0x4e2620",
+      "bytes": "33f68b86c074bb0085c074678b86c874bb0083f803740583f80475493b7dfc75436890000000e8055ff8ff5250bab4648300b910000000e8045ef8ff85c074248b0d583fbc008b155c3fbc00894df08b8ec074bb008955f4518d55f0528bc8e81c8610004781c60c020000",
+      "meaning": "active-status filtering and selected quest/NPC request"
+    },
+    {
+      "va": "0x501d70",
+      "bytes": "e8ebf7ffff33c0c39090909090909090",
+      "meaning": "Native CompleteQuest registration target calls progress continuation"
+    },
+    {
+      "va": "0x501560",
+      "bytes": "833d1808be00027545a14408be0085c0753c6890000000e8d46ff6ff5250bab4648300b910000000e8d36ef6ff85c0741d8b0d1c08be0051681008be008bc8e88c970e00c7054408be0001000000c390",
+      "meaning": "Requires mode 2 and no pending request; requests reward offer"
+    },
+    {
+      "va": "0x501d40",
+      "bytes": "568bf1e8e8f4ffff85c08bce7413680000f03f6a00e8b61a1f00b8010000005ec3e88a1a1f00b8010000005e",
+      "meaning": "Native IsQuestCompletable Lua wrapper invokes current requirements check"
+    },
+    {
+      "va": "0x5016a0",
+      "bytes": "33c033c98b9120f0bd0085d2740c83c1244081f9d800000072eac39090909090",
+      "meaning": "GetNumQuestRewards: BDF020 ID, stride 24, maximum 6"
+    },
+    {
+      "va": "0x5016c0",
+      "bytes": "33c033c98b912cf0bd0085d2740c83c1244081f9d800000072eac39090909090",
+      "meaning": "GetNumQuestChoices: BDF02C ID, stride 24, maximum 6"
+    },
+    {
+      "va": "0x50174e",
+      "bytes": "8d04f6c1e0028b8820f0bd008bb024f0bd008b9028f0bd00eb60",
+      "meaning": "Fixed reward ID/count pair BDF020/BDF024"
+    },
+    {
+      "va": "0x50177c",
+      "bytes": "8d04f6c1e0028b882cf0bd008bb030f0bd008b8034f0bd008907",
+      "meaning": "Choice reward ID/count pair BDF02C/BDF030"
+    },
+    {
+      "va": "0x501d80",
+      "bytes": "5657ba010000008bf983ceffe83f171f0085c07414ba010000008bcfe87f181f00e80a85f0ff8bf04e8bcee800f8ffff85c0750e68a4ed840057e8812b1f0083c4085f33c05ec3909090909090909090",
+      "meaning": "Lua GetQuestReward optional choice argument"
+    },
+    {
+      "va": "0x5015b0",
+      "bytes": "833d1808be000356578bf174085fb8010000005ec36890000000e8816ff6ff5250bab4648300b910000000e8806ef6ff8bf885ff75085fb8010000005ec3a14408be0085c074085fb8010000005ec3e8bc00000085c07e183bf07d3e85f67c3a8d04f68b0c852cf0bd00890d2808be00a11c08be0033d285f60f9ec28bcf4a23d65250681008be00e883970e00b8010000005fa34408be005ec35f33c05ec390e90b0000009090909090909090909090d90528818000dcc0d91df407be00c390e90b0000009090909090909090909090d905d8f97f00d835f407be00d91d14f0bd00c3909090",
+      "meaning": "Native reward acceptance mode 3, pending flag, choice validation and request"
+    },
+    {
+      "va": "0x501dd0",
+      "bytes": "db052c08be0083ec08dd1c24e82f1a1f00b801000000c3909090909090909090a13008be",
+      "meaning": "GetRewardMoney reads BE082C"
+    },
+    {
+      "va": "0x5173c3",
+      "bytes": "8b97680e00008b82400800008945fc",
+      "meaning": "UnitXP uses player-fields pointer plus 840; full descriptor offset B30"
+    },
+    {
+      "va": "0x517410",
+      "bytes": "558bec83ec08568bf1ba010000008975f8e8eac01d0085c07515682c0f850056e80bd51d0083c40833c05e8be55dc357ba010000008bcee844c21d008bc8e8ede4ffff8bf885ff74568b47088b4808c1e904f6c10174488b30538b5804e8de10f5ff3bf075043bda7409c745fc00000000eb0f8b97680e00008b82440800008945fcdb45fc8b4df883ec08dd1c24e86dc31d005b5fb8010000005e8be55dc36a006a008bcee856c31d005fb8010000005e8be55dc39090909090909090909090",
+      "meaning": "UnitXPMax uses player-fields pointer plus 844; full descriptor offset B34"
+    },
+    {
+      "va": "0x83b4ac",
+      "bytes": "24c48300100200000100000001000000020000000cc4830011020000010000000100000002000000",
+      "meaning": "PLAYER_XP and PLAYER_NEXT_LEVEL_XP descriptor table entries"
+    },
+    {
+      "va": "0x5dc400",
+      "bytes": "538bdc83ec0883e4f883c404558b6b04896c24048bec81ecc8010000568b7308578bf98d45dc508bce897df4e8ffc9e3ff8d4dac518bcee8f4c9e3ff8d55e0528bcee8e9c9e3ff8d45e8508bcee8dec9e3ff8d4dec518bcee8d3c9e3ff8b4dec33d28955bc8955c08955c433c03bc88955c88955cc8945fc7e378d9b000000008b45fc8d4c85bc518bcee8a1c9e3ff8b55fc8d849578ffffff508bcee88fc9e3ff8b45fc8b4dec403bc18945fc7cd133c08b55dc50506810c75d008d4db05152b9b0e1c0008945b08945b4e87065f8ff85c08945e4741a8b482485c97513059c00000050688a000000e832a2ebff83c4088b45e085c0740e506895000000e81da2ebff83c4088b4de885c90f8e080100008d55d0e8479d0e008d85b8feffff8945fc8d7dd0be20af80008d9b000000006a0083caff8bcee8b47612006a20508d4d8c51e858e006008b078b4dfc8d558c525068dc7f84006a4051e891e206008b4dfc83c61083c14083c41483c70481fe50af8000894dfc7cb78b4dd085c9740b8d95b8feffff8955fceb07c745fc482788008b7dd885ff8b45d4750485c0740985c9be0c4884007505be4827880085c08d95f8feffff7505ba4827880085ff740f85c0750485c97407b90c488400eb05b94827880085ff8d8538ffffff7505b8482788008b7dfc575652515068d07f84008d8538feffff688000000050e8eee106008d8d38feffff516897000000e80da1ebff8b7df483c4288b45ec33f685c07e548b57088b026a006a008945f08b4a048b44b5bc68b0c75d008d55f052894df450b9a0e2c000e8e4f3f7ff85c0741e8b4f088b118955f88b41048b4cb5bc6a016a008d55f88945fce8420100008b45ec463bf07cac8b352808be0085f674508b4f088b116a006a008955f08b410468b0c75d008d4df05156b9a0e2c0008945f4e88af3f7ff85c0741c8b57088b028945f08b4a046a01894df46a008d55f08bcee8ea000000c7052808be00000000008b75e485f6740e8b462485c07407b901000000eb0233c933d2e8424af2ff85f6740c8b460485c07505e872e900005f5e8be55d8be3b8010000005bc204009090538bdc83ec0883e4f883c404558b6b04896c24048bec8a530c83ec0c33c03ad05674645050508945f88945fc8d45f85051b9b0e1c000e8f562f8ff8bf085f674468b462485c075148d8e9c00000051688a000000e8b79febff83c4088b460485c075246890000000e8d3bde8ff5250ba48f98500b910000000e8d2bce8ff85c07405e8d9e800005e8be55d8be35bc20800909090909090909090909090909090538bdc83ec0883e4f883c404558b6b04896c24048bec81ec08010000568bf18a4b0c33c03ac85774565050508945f88945fc8d45f85056b9a0e2c000e83ff2f7ff8bf885ff74386a0056ba000100008d8df8feffffe8f6c2ffff8b571c8d8df8feffff516a006a006a00",
+      "meaning": "Quest completion response handler: quest/XP/money local values; not a persistent receipt"
+    },
+    {
+      "va": "0x613980",
+      "bytes": "558bec8b45088b550c89410889510c5dc20800",
+      "meaning": "Object field initializer stores supplied full descriptor at object+8"
+    },
+    {
+      "va": "0x5fad10",
+      "bytes": "558bec538b5d0856578b7d0c57538bf1e85b8c010083c318899e10010000e87d45e8ff8d04875f8986140100005e5b5dc2",
+      "meaning": "Unit initializer preserves full descriptor and derives unit field pointer"
+    },
+    {
+      "va": "0x5dd2a0",
+      "bytes": "558bec538b5d0856578b7d0c57538bf1e85bda010081c3f0020000899e680e0000",
+      "meaning": "Player initializer sets player+E68 to full descriptor+2F0"
+    },
+    {
+      "va": "0x517483",
+      "bytes": "8b97680e00008b8244080000",
+      "meaning": "UnitXPMax reads player+E68 then relative offset 844"
+    }
+  ]
+}
