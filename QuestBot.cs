@@ -414,12 +414,6 @@ public sealed partial class QuestBot : BotBase
             resuming ? "Resuming profile patrol after target release." : "Patrolling profile hotspots before target acquisition.");
 
         MovementDestination = destination;
-        if (me.Location.Distance2D(destination) <= Navigator.PathPrecision)
-        {
-            HandleDestinationReached();
-            return;
-        }
-
         LastMoveResult = Navigator.MoveTo(destination);
         NavigatorMoveCalls++;
         if (resuming)
@@ -429,6 +423,8 @@ public sealed partial class QuestBot : BotBase
 
         if (LastMoveResult == MoveResult.ReachedDestination)
             HandleDestinationReached();
+        else if (LastMoveResult is MoveResult.Failed or MoveResult.PathGenerationFailed)
+            AbortMovement("Navigator could not generate or follow a complete path");
     }
 
     private void ExecuteTargetApproach(LocalPlayer me)
@@ -501,6 +497,8 @@ public sealed partial class QuestBot : BotBase
 
         LastMoveResult = Navigator.MoveTo(target.Location);
         NavigatorMoveCalls++;
+        if (LastMoveResult is MoveResult.Failed or MoveResult.PathGenerationFailed)
+            AbortMovement("Navigator could not approach the target");
     }
 
     private void TrackProgress(WoWPoint current)

@@ -27,8 +27,11 @@ internal sealed class LinuxProcessMemory : IDisposable
 
             nint bytesRead = process_vm_readv(ProcessId, ref local, 1, ref remote, 1, 0);
             if (bytesRead == -1)
-                throw new Win32Exception(Marshal.GetLastPInvokeError(),
-                    $"process_vm_readv failed at 0x{address:X}");
+            {
+                int error = Marshal.GetLastPInvokeError();
+                throw new Win32Exception(error,
+                    $"process_vm_readv failed at 0x{address:X}: {new Win32Exception(error).Message} (errno {error})");
+            }
             if ((nuint)bytesRead != (nuint)destination.Length)
                 throw new IOException(
                     $"Short memory read at 0x{address:X}: expected {destination.Length}, got {bytesRead}.");

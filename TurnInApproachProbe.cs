@@ -9,11 +9,12 @@ namespace Honorbuddy5875.Runtime;
 
 internal static class TurnInApproachProbe
 {
-    internal static int Run(string? path, bool execute)
+    internal static int Run(string? path, bool execute, string? meshDirectory = null)
     {
+        Honorbuddy5875.Navigation.VanillaNavigationSession? navigation = null;
         QuestBot? bot = null;
         UInputPlayerMover? mover = null;
-        PlayerMover previousMover = Navigator.PlayerMover;
+        IPlayerMover previousMover = Navigator.PlayerMover;
         using var cancellation = new CancellationTokenSource();
         ConsoleCancelEventHandler cancel = (_, e) => { e.Cancel = true; cancellation.Cancel(); };
         Console.CancelKeyPress += cancel;
@@ -25,6 +26,8 @@ internal static class TurnInApproachProbe
             var order = ProfileManager.CurrentProfile.QuestOrder;
             TurnInProbeProfile.Validate(order);
             ObjectManager.Initialize5875();
+            if (meshDirectory is not null)
+                navigation = new Honorbuddy5875.Navigation.VanillaNavigationSession(meshDirectory);
             bot = new QuestBot { MovementExecutionEnabled = false, ClientTargetSyncEnabled = false,
                 MaximumMovementDisplacement = 30, NoProgressTimeout = TimeSpan.FromSeconds(4) };
             bot.Start();
@@ -42,9 +45,14 @@ internal static class TurnInApproachProbe
                 Console.WriteLine("TURN-IN STEP 6 APPROACH RESULT: ALREADY IN RANGE - no movement performed.");
                 return 0;
             }
+            if (navigation is null)
+                throw new InvalidOperationException("Mesh navigation requires --mesh-directory <mmaps-directory>.");
+            if (bot.CurrentDecision.Destination is not Styx.Logic.Pathing.WoWPoint destination ||
+                !Navigator.CanNavigateFully(ObjectManager.Me!.Location, destination))
+                throw new InvalidOperationException("No complete walkable mesh path to the quest giver.");
             if (!CanStart(bot)) return 2;
             Console.WriteLine("Movement starts in 5 seconds. Focus WoW with chat closed. W/A/D use the existing movement bindings.");
-            Console.WriteLine("Use a clear, short path on the same level. Ctrl+C in this terminal cancels; timeout is 25 seconds.");
+            Console.WriteLine("A complete ground mesh corridor is required. Ctrl+C in this terminal cancels; timeout is 25 seconds.");
             for (int i = 5; i > 0 && !cancellation.IsCancellationRequested; i--)
             { Console.WriteLine(i); Thread.Sleep(1000); }
             if (cancellation.IsCancellationRequested) return 2;
@@ -103,6 +111,7 @@ internal static class TurnInApproachProbe
                 finally
                 {
                     mover?.Dispose();
+                    navigation?.Dispose();
                     ObjectManager.Shutdown5875();
                     ProfileManager.LoadEmpty();
                 }
@@ -175,7 +184,7 @@ internal static class TurnInApproachProbe
             npc = near with { Distance = 3.6, Distance2D = 3.6 }; Tick();
             Check(bot.CurrentDecision.Kind == QuestDecisionKind.MoveToQuestGiver, "half-yard margin");
             npc = near with { Distance = 10, Distance2D = 0 }; Tick();
-            Check(bot.CurrentDecision.Kind == QuestDecisionKind.QuestStateBlocked, "vertical separation is not arrival");
+            Check(bot.CurrentDecision.Kind == QuestDecisionKind.MoveToQuestGiver, "vertical separation delegates route finding to Navigator");
             npc = near with { Distance = 3.8, Distance2D = 0 }; Tick();
             Check(bot.CurrentDecision.Kind == QuestDecisionKind.QuestGiverInRange,
                 "in-range vertical offset does not loop on Navigator's 2D precision");

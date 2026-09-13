@@ -1,0 +1,24 @@
+Branch: codex/orc-routing-step12
+Baseline: eb66e53 (clean working tree before this task)
+Validation date: 2026-09-13
+
+VMaNGOS Detour source hashes: verified by NavigationStep12/build.sh
+Native CMake build: PASS
+Native generated-mesh tests: PASS, 38 checks
+.NET 10 build: PASS, 0 warnings, 0 errors
+Navigation self-test with real map 1 tiles: PASS, 32 checks
+Real map: 9 tiles loaded; Valley of Trials path: 137 points
+Real cross-tile path 0013339 -> 0013340: PASS
+Reward acceptance regression: PASS, 68 checks
+Reward dialog regression: PASS, 46 checks
+Gossip regression: PASS, 51 checks
+Turn-in interaction regression: PASS, 20 checks
+Turn-in approach regression: PASS, 24 checks
+QuestOrder regression: PASS, 21 checks
+Quest cache regression with actual quest-4641 fixture: PASS, 363 checks
+git diff --check: PASS
+
+Live status: BLOCKED at process_vm_readv; kernel.yama.ptrace_scope=1.
+The WoW process was found outside the sandbox. sudo -n required a password.
+No movement, combat, NPC interaction or quest acceptance was sent.
+Live map decoding, path following and end-to-end Orc quest routing are NOT verified.

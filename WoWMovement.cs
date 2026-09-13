@@ -20,7 +20,12 @@ public static class WoWMovement
         => Styx.Logic.Pathing.Navigator.PlayerMover.Move(direction);
 
     public static void MoveStop(MovementDirection direction)
-        => Styx.Logic.Pathing.Navigator.PlayerMover.MoveStop(direction);
+    {
+        if (Styx.Logic.Pathing.Navigator.PlayerMover is Styx.Logic.Pathing.PlayerMover keyboardMover)
+            keyboardMover.MoveStop(direction);
+        else
+            Styx.Logic.Pathing.Navigator.PlayerMover.MoveStop();
+    }
 
     public static void MoveStop()
         => Styx.Logic.Pathing.Navigator.PlayerMover.MoveStop();

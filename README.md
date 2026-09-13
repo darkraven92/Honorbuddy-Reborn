@@ -1,4 +1,13 @@
-# Honorbuddy 5875 Phase 16.1
+# Honorbuddy Reborn — WoW 1.12.1 build 5875
+
+Aktuellt arbete: [mesh-navigation, steg 12](NavigationStep12/README.md).
+Navigator använder nu en `INavigationProvider` med VMaNGOS/Detour-mesh och
+`IPlayerMover` för rörelse. Bygginstruktioner, offlineprov och liveprov finns där.
+
+Questdialog och belöningsflöde dokumenteras i [steg 10](QuestRewardStep10/README.md).
+En fullständig Orc-questprofil för 4641, 788 och 789 återstår.
+
+## Tidigare CombatRoutine-prov
 
 Phase 16.1 validates the first minimal clean-room `CombatRoutine` state machine against WoW 1.12.1 build 5875.
 
@@ -16,13 +25,13 @@ Flow:
 Run preflight:
 
 ```bash
-env MSBuildEnableWorkloadResolver=false dotnet run --project Honorbuddy5875Phase16.csproj
+env MSBuildEnableWorkloadResolver=false dotnet run --project HonorbuddyReborn.csproj
 ```
 
 Run live test:
 
 ```bash
-env MSBuildEnableWorkloadResolver=false dotnet run --project Honorbuddy5875Phase16.csproj -- --combat-routine-test
+env MSBuildEnableWorkloadResolver=false dotnet run --project HonorbuddyReborn.csproj -- --combat-routine-test --mesh-directory /path/to/mmaps
 ```
 
 The live test expects WoW's **Attack Target** binding on `T`.

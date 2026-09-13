@@ -80,11 +80,6 @@ public sealed partial class QuestBot
             description = $"TurnIn quest={turn.QuestId}: NPC {npc.Entry} within modeled interaction range " +
                 $"({npc.Distance:F2}/{npc.InteractRange:F2}); interaction pending; node retained.";
         }
-        else if (npc.Distance2D <= Navigator.PathPrecision && npc.Distance >= npc.InteractRange)
-        {
-            kind = QuestDecisionKind.QuestStateBlocked;
-            description = "Quest giver differs in elevation; the current direct Navigator cannot resolve this path.";
-        }
         else
         {
             kind = QuestDecisionKind.MoveToQuestGiver;
@@ -108,7 +103,7 @@ public sealed partial class QuestBot
         MovementDestination = destination;
         LastMoveResult = Navigator.MoveTo(destination);
         NavigatorMoveCalls++;
-        if (LastMoveResult == MoveResult.Failed)
+        if (LastMoveResult is MoveResult.Failed or MoveResult.PathGenerationFailed)
             AbortMovement("Navigator could not approach the quest giver");
         // Reaching this point never consumes TurnIn or marks the quest rewarded.
         // The next object pulse refreshes the distance and stops movement in range.

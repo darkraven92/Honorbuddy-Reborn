@@ -162,7 +162,8 @@ public sealed class MinimalAutoAttackRoutine : CombatRoutine
                 }
                 else
                 {
-                    Navigator.MoveTo(target.Location);
+                    if (Navigator.MoveTo(target.Location) is MoveResult.Failed or MoveResult.PathGenerationFailed)
+                        Abort("Navigator could not approach the target");
                     MoveCalls++;
                 }
                 break;
@@ -179,7 +180,8 @@ public sealed class MinimalAutoAttackRoutine : CombatRoutine
             case MinimalCombatState.MaintainMelee:
                 if (target.Distance2D > ReapproachDistance)
                 {
-                    Navigator.MoveTo(target.Location);
+                    if (Navigator.MoveTo(target.Location) is MoveResult.Failed or MoveResult.PathGenerationFailed)
+                        Abort("Navigator could not maintain melee range");
                     MoveCalls++;
                 }
                 else

@@ -22,6 +22,9 @@ internal static class Program
 
     private static int Main(string[] args)
     {
+        if (args.FirstOrDefault() == "--mesh-path-test") return NavigationProbe.Run(args);
+        if (args.FirstOrDefault() == "--navigation-live-test") return NavigationLiveProbe.Run(args);
+        if (args.FirstOrDefault() == "--navigation-self-test") return NavigationSelfTest.Run(args.Skip(1).FirstOrDefault());
         if (args.Any(a => string.Equals(a, "--quest-reward-accept-self-test", StringComparison.OrdinalIgnoreCase)))
             return QuestRewardAcceptSelfTest.Run();
         int acceptTest = Array.FindIndex(args, a => string.Equals(a, "--quest-reward-accept-test", StringComparison.OrdinalIgnoreCase));
@@ -65,8 +68,12 @@ internal static class Program
             return TurnInApproachProbe.RunSelfTest();
         int approachTest = Array.FindIndex(args, a => string.Equals(a, "--turn-in-approach-test", StringComparison.OrdinalIgnoreCase));
         if (approachTest >= 0)
+        {
+            int meshArg = Array.FindIndex(args, a => a == "--mesh-directory");
             return TurnInApproachProbe.Run(approachTest + 1 < args.Length ? args[approachTest + 1] : null,
-                args.Any(a => string.Equals(a, "--execute", StringComparison.OrdinalIgnoreCase)));
+                args.Any(a => string.Equals(a, "--execute", StringComparison.OrdinalIgnoreCase)),
+                meshArg >= 0 && meshArg + 1 < args.Length ? args[meshArg + 1] : null);
+        }
 
         if (args.Any(a => string.Equals(a, "--quest-order-self-test", StringComparison.OrdinalIgnoreCase)))
             return QuestOrderProbe.RunSelfTest();
@@ -94,6 +101,8 @@ internal static class Program
         UInputClientTargeting? targetInput = null;
         UInputCombatActions? combatInput = null;
         MinimalAutoAttackRoutine? routine = null;
+        Honorbuddy5875.Navigation.VanillaNavigationSession? navigation = null;
+        IPlayerMover previousMover = Navigator.PlayerMover;
 
         try
         {
@@ -189,6 +198,10 @@ internal static class Program
                 return 0;
             }
 
+            int meshDirectoryArg = Array.FindIndex(args, a => a == "--mesh-directory");
+            if (meshDirectoryArg < 0 || meshDirectoryArg + 1 >= args.Length)
+                throw new ArgumentException("Combat movement requires --mesh-directory <mmaps-directory>.");
+            navigation = new Honorbuddy5875.Navigation.VanillaNavigationSession(args[meshDirectoryArg + 1]);
             mover = new UInputPlayerMover();
             targetInput = new UInputClientTargeting();
             combatInput = new UInputCombatActions();
@@ -380,9 +393,11 @@ internal static class Program
         {
             try { routine?.ShutDown(); } catch { }
             try { Navigator.Clear(); } catch { }
+            try { Navigator.PlayerMover = previousMover; } catch { }
             try { mover?.Dispose(); } catch { }
             try { targetInput?.Dispose(); } catch { }
             try { combatInput?.Dispose(); } catch { }
+            try { navigation?.Dispose(); } catch { }
             ObjectManager.Shutdown5875();
         }
     }
