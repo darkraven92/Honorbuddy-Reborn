@@ -128,7 +128,7 @@ public static class ClientTargetSelector5875
 
             WoWUnit? unit = guid == 0 ? null : ObjectManager.GetObjectByGuid<WoWUnit>(guid);
             bool strict = unit?.IsStrictHostileCombatCandidate ?? false;
-            bool profileCandidate = unit is not null && LevelBot.IsProfileTargetCandidate(unit, profile);
+            bool profileCandidate = IsAcceptedProfileCandidate(unit, profile, requiredEntry);
             double distance = unit?.Distance2D ?? double.NaN;
             bool distanceAccepted = unit is not null &&
                                     double.IsFinite(distance) &&
@@ -147,15 +147,16 @@ public static class ClientTargetSelector5875
             attempts.Add(item);
 
             if (unit is not null &&
-                unit.MyReaction == WoWUnitReaction.Hostile &&
-                strict &&
                 profileCandidate &&
                 EntryMatches(unit.Entry, requiredEntry) &&
                 distanceAccepted)
             {
+                string mode = requiredEntry == 0
+                    ? "profile-valid strict hostile"
+                    : $"profile-valid quest objective entry {requiredEntry}";
                 string reason = guid == preferredGuid
-                    ? "preferred internal strict-hostile GUID selected by client"
-                    : "client selected a different strict-hostile unit that passes the same profile filter";
+                    ? $"preferred internal {mode} selected by client"
+                    : $"client selected a different {mode}";
 
                 return new ClientTargetSelectionResult(
                     true, preferredGuid, initial, guid, false, attempts, reason);
@@ -164,9 +165,12 @@ public static class ClientTargetSelector5875
 
         ObjectManager.Update();
         ulong finalGuid = Styx.StyxWoW.Me?.CurrentTargetGuid ?? 0;
+        string expected = requiredEntry == 0
+            ? "profile-valid strict hostile"
+            : $"profile-valid quest objective entry {requiredEntry}";
         return new ClientTargetSelectionResult(
             false, preferredGuid, initial, finalGuid, false, attempts,
-            $"no profile-valid strict hostile in the approach distance window selected after {maxTabAttempts} Tab attempts");
+            $"no {expected} in the approach distance window selected after {maxTabAttempts} Tab attempts");
     }
 
     private static bool TryBuildAcceptedAttempt(
@@ -181,7 +185,7 @@ public static class ClientTargetSelector5875
     {
         WoWUnit? unit = guid == 0 ? null : ObjectManager.GetObjectByGuid<WoWUnit>(guid);
         bool strict = unit?.IsStrictHostileCombatCandidate ?? false;
-        bool profileCandidate = unit is not null && LevelBot.IsProfileTargetCandidate(unit, profile);
+        bool profileCandidate = IsAcceptedProfileCandidate(unit, profile, requiredEntry);
         double distance = unit?.Distance2D ?? double.NaN;
         bool distanceAccepted = unit is not null &&
                                 double.IsFinite(distance) &&
@@ -199,11 +203,22 @@ public static class ClientTargetSelector5875
             guid != 0 && guid == preferredGuid);
 
         return unit is not null &&
-               unit.MyReaction == WoWUnitReaction.Hostile &&
-               strict &&
                profileCandidate &&
                EntryMatches(unit.Entry, requiredEntry) &&
                distanceAccepted;
+    }
+
+    private static bool IsAcceptedProfileCandidate(
+        WoWUnit? unit,
+        Profile profile,
+        uint requiredEntry)
+    {
+        if (unit is null)
+            return false;
+
+        return requiredEntry == 0
+            ? LevelBot.IsProfileTargetCandidate(unit, profile)
+            : LevelBot.IsQuestObjectiveTargetCandidate(unit, profile, requiredEntry);
     }
 
     internal static bool EntryMatches(uint actualEntry, uint requiredEntry)

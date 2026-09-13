@@ -64,6 +64,29 @@ internal static class QuestObjectiveCombatSelfTest
                 QuestBot.SelectObjectiveTarget(9999, 0, candidates) is null,
                 "missing objective entry returns no target");
 
+            var neutralObjective = new ObjectiveTargetSnapshot(
+                15,
+                3098,
+                new(3, 0, 0),
+                3,
+                true,
+                false,
+                true);
+
+            Check(
+                QuestBot.SelectObjectiveTarget(
+                    3098,
+                    0,
+                    new[] { neutralObjective })?.Guid == 15,
+                "attackable neutral-potential exact objective entry is accepted");
+
+            Check(
+                QuestBot.SelectObjectiveTarget(
+                    9999,
+                    0,
+                    new[] { neutralObjective }) is null,
+                "neutral-potential target cannot bypass required objective entry");
+
             QuestOrderSnapshot state = State(done: 0);
             ObjectiveTargetSnapshot? liveTarget = candidates[2];
 

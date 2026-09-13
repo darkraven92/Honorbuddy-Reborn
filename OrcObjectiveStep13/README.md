@@ -26,3 +26,32 @@ Regression commands:
     dotnet bin/Debug/net10.0/HonorbuddyReborn.dll --navigation-self-test /home/ludvig/Games/WoW-NavData/mmaps
 
 The Step 13 self-test uses injected target snapshots and never opens `/dev/uinput`.
+
+## Step 13.1: neutral objective mobs and one-kill live probe
+
+Generic grind targeting remains strict-hostile. An active `KillMob` objective
+may additionally include an exact-entry unit when build 5875 reports it through
+`IsNeutralPotentialCombatCandidate`. This is required for starter-zone mobs such
+as quest 788's Mottled Boar entry `3098`.
+
+The client target selector uses the same exact entry and profile safety filters.
+`MinimalAutoAttackRoutine` keeps its original strict-hostile default; neutral
+potential is enabled only by the quest-objective caller after exact-entry
+validation.
+
+Dry preflight:
+
+    dotnet bin/Debug/net10.0/HonorbuddyReborn.dll \
+      --quest-objective-combat-test \
+      /home/ludvig/Games/WoW-NavData/mmaps
+
+Live single kill:
+
+    dotnet bin/Debug/net10.0/HonorbuddyReborn.dll \
+      --quest-objective-combat-test \
+      /home/ludvig/Games/WoW-NavData/mmaps \
+      --execute
+
+The live probe disables objective combat immediately after the first observed
+target death and passes only when quest 788's live descriptor changes by exactly
+one kill. It does not loot or continue to a second mob.

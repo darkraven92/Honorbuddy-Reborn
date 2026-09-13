@@ -19,7 +19,8 @@ internal sealed record ObjectiveTargetSnapshot(
     WoWPoint Location,
     double Distance,
     bool Alive,
-    bool StrictHostile);
+    bool StrictHostile,
+    bool NeutralPotential = false);
 
 public sealed partial class QuestBot
 {
@@ -34,6 +35,7 @@ public sealed partial class QuestBot
     private bool _awaitingObjectiveCredit;
     private long _objectiveCreditDeadline;
     private MinimalAutoAttackRoutine? _objectiveCombatRoutine;
+    private bool _objectiveTargetFilterAttached;
 
     public bool ObjectiveCombatExecutionEnabled { get; set; }
     public UInputCombatActions? ObjectiveCombatInput { get; set; }
@@ -62,7 +64,8 @@ public sealed partial class QuestBot
                     unit.Location,
                     unit.Distance2D,
                     unit.IsAlive,
-                    unit.IsStrictHostileCombatCandidate));
+                    unit.IsStrictHostileCombatCandidate,
+                    unit.IsNeutralPotentialCombatCandidate));
             }
             catch (Exception ex) when (ex is IOException or InvalidOperationException)
             {
@@ -90,7 +93,7 @@ public sealed partial class QuestBot
            target.Guid != 0 &&
            target.Entry == requiredEntry &&
            target.Alive &&
-           target.StrictHostile &&
+           (target.StrictHostile || target.NeutralPotential) &&
            double.IsFinite(target.Distance) &&
            target.Distance >= 0 &&
            float.IsFinite(target.Location.X) &&
@@ -239,9 +242,10 @@ public sealed partial class QuestBot
                 !selected.IsValid ||
                 !selected.IsAlive ||
                 selected.Entry != CurrentDecision.Entry ||
-                selected.MyReaction != WoWUnitReaction.Hostile ||
-                !selected.IsStrictHostileCombatCandidate ||
-                !LevelBot.IsProfileTargetCandidate(selected, profile))
+                !LevelBot.IsQuestObjectiveTargetCandidate(
+                    selected,
+                    profile,
+                    CurrentDecision.Entry))
             {
                 ClientTargetSyncFailures++;
                 AbortMovement("objective client target failed entry/profile/hostile validation");
@@ -255,14 +259,18 @@ public sealed partial class QuestBot
                 selected.Location,
                 selected.Distance2D,
                 selected.IsAlive,
-                selected.IsStrictHostileCombatCandidate);
+                selected.IsStrictHostileCombatCandidate,
+                selected.IsNeutralPotentialCombatCandidate);
 
             _clientTargetSynchronized = true;
             SynchronizedClientTargetGuid = selected.Guid;
             ClientTargetSyncSuccesses++;
 
             _objectiveCombatRoutine =
-                new MinimalAutoAttackRoutine(selected.Guid, ObjectiveCombatInput);
+                new MinimalAutoAttackRoutine(
+                    selected.Guid,
+                    ObjectiveCombatInput,
+                    allowNeutralPotential: true);
 
             RoutineManager.SetCurrent(_objectiveCombatRoutine);
             _objectiveCombatRoutine.Initialize();
@@ -334,6 +342,44 @@ public sealed partial class QuestBot
 
         try { routine.ShutDown(); } catch { }
         try { routine.Dispose(); } catch { }
+    }
+
+    private void AttachObjectiveTargetFilter()
+    {
+        if (_objectiveTargetFilterAttached)
+            return;
+
+        Targeting.Instance.IncludeTargetsFilter += IncludeQuestObjectiveTargets;
+        _objectiveTargetFilterAttached = true;
+    }
+
+    private void DetachObjectiveTargetFilter()
+    {
+        if (!_objectiveTargetFilterAttached)
+            return;
+
+        Targeting.Instance.IncludeTargetsFilter -= IncludeQuestObjectiveTargets;
+        _objectiveTargetFilterAttached = false;
+    }
+
+    private void IncludeQuestObjectiveTargets(
+        List<WoWObject> incomingUnits,
+        HashSet<WoWObject> outgoingUnits)
+    {
+        uint requiredEntry = _objectiveEntry;
+        if (requiredEntry == 0)
+            return;
+
+        Profile profile = ProfileManager.CurrentProfile;
+
+        foreach (WoWUnit unit in incomingUnits.OfType<WoWUnit>())
+        {
+            if (LevelBot.IsQuestObjectiveTargetCandidate(
+                    unit,
+                    profile,
+                    requiredEntry))
+                outgoingUnits.Add(unit);
+        }
     }
 
     private void ResetObjectiveCombatState(bool resetCounters = false)

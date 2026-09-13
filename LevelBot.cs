@@ -25,6 +25,29 @@ public static class LevelBot
     {
         if (!unit.IsValid || !unit.IsStrictHostileCombatCandidate)
             return false;
+
+        return PassesProfileTargetFilters(unit, profile);
+    }
+
+    public static bool IsQuestObjectiveTargetCandidate(
+        WoWUnit unit,
+        Profile profile,
+        uint requiredEntry)
+    {
+        if (!unit.IsValid ||
+            requiredEntry == 0 ||
+            unit.Entry != requiredEntry)
+            return false;
+
+        if (!unit.IsStrictHostileCombatCandidate &&
+            !unit.IsNeutralPotentialCombatCandidate)
+            return false;
+
+        return PassesProfileTargetFilters(unit, profile);
+    }
+
+    private static bool PassesProfileTargetFilters(WoWUnit unit, Profile profile)
+    {
         if (unit.Level < profile.TargetMinLevel || unit.Level > profile.TargetMaxLevel)
             return false;
         if (profile.AvoidMobs.Contains(unit.Entry))
@@ -37,10 +60,12 @@ public static class LevelBot
         {
             if (area.MaxDistance is double maxDistance && unit.Distance > maxDistance)
                 return false;
-            if (area.Factions.Count > 0 && !area.Factions.Contains(checked((int)unit.FactionId)))
+            if (area.Factions.Count > 0 &&
+                !area.Factions.Contains(checked((int)unit.FactionId)))
                 return false;
         }
-        else if (profile.Factions.Count > 0 && !profile.Factions.Contains(unit.FactionId))
+        else if (profile.Factions.Count > 0 &&
+                 !profile.Factions.Contains(unit.FactionId))
         {
             return false;
         }

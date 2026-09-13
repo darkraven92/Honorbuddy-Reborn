@@ -27,6 +27,7 @@ internal static class Program
         if (args.FirstOrDefault() == "--navigation-self-test") return NavigationSelfTest.Run(args.Skip(1).FirstOrDefault());
         if (args.FirstOrDefault() == "--quest-routing-self-test") return QuestRoutingSelfTest.Run(args.Skip(1).FirstOrDefault());
         if (args.FirstOrDefault() == "--quest-objective-combat-self-test") return QuestObjectiveCombatSelfTest.Run();
+        if (args.FirstOrDefault() == "--quest-objective-combat-test") return QuestObjectiveCombatProbe.Run(args);
         if (args.FirstOrDefault() == "--quest-routing-test") return QuestRoutingProbe.Run(args);
         if (args.Any(a => string.Equals(a, "--quest-reward-accept-self-test", StringComparison.OrdinalIgnoreCase)))
             return QuestRewardAcceptSelfTest.Run();

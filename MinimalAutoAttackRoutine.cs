@@ -31,6 +31,7 @@ public sealed class MinimalAutoAttackRoutine : CombatRoutine
 
     private readonly ulong _targetGuid;
     private readonly UInputCombatActions _combatInput;
+    private readonly bool _allowNeutralPotential;
     private readonly WoWPoint _startLocation;
     private readonly uint _startHealth;
 
@@ -38,10 +39,14 @@ public sealed class MinimalAutoAttackRoutine : CombatRoutine
     private uint _lastTargetHealth;
     private DateTime _lastDamageAt;
 
-    public MinimalAutoAttackRoutine(ulong targetGuid, UInputCombatActions combatInput)
+    public MinimalAutoAttackRoutine(
+        ulong targetGuid,
+        UInputCombatActions combatInput,
+        bool allowNeutralPotential = false)
     {
         _targetGuid = targetGuid;
         _combatInput = combatInput ?? throw new ArgumentNullException(nameof(combatInput));
+        _allowNeutralPotential = allowNeutralPotential;
 
         LocalPlayer me = Styx.StyxWoW.Me
             ?? throw new InvalidOperationException("LocalPlayer unavailable while creating combat routine.");
@@ -126,9 +131,9 @@ public sealed class MinimalAutoAttackRoutine : CombatRoutine
             return;
         }
 
-        if (target.MyReaction != WoWUnitReaction.Hostile || !target.IsStrictHostileCombatCandidate)
+        if (!IsAllowedCombatCandidate(target))
         {
-            Abort("selected target ceased to be a strict hostile combat candidate");
+            Abort("selected target ceased to be an allowed combat candidate");
             return;
         }
 
@@ -222,8 +227,13 @@ public sealed class MinimalAutoAttackRoutine : CombatRoutine
            target.IsAlive &&
            me.CurrentTargetGuid == _targetGuid &&
            target.Guid == _targetGuid &&
-           target.MyReaction == WoWUnitReaction.Hostile &&
-           target.IsStrictHostileCombatCandidate;
+           IsAllowedCombatCandidate(target);
+
+    private bool IsAllowedCombatCandidate(WoWUnit target)
+        => (target.MyReaction == WoWUnitReaction.Hostile &&
+            target.IsStrictHostileCombatCandidate) ||
+           (_allowNeutralPotential &&
+            target.IsNeutralPotentialCombatCandidate);
 
     private void Abort(string reason)
     {

@@ -130,6 +130,7 @@ public sealed partial class QuestBot : BotBase
     public override void Start()
     {
         ResetObjectiveCombatState(resetCounters: true);
+        AttachObjectiveTargetFilter();
         _rewardAttempt = null;
         _profileNodeIndex = 0;
         _questOrderProfile = null;
@@ -182,6 +183,7 @@ public sealed partial class QuestBot : BotBase
 
     public override void Stop()
     {
+        DetachObjectiveTargetFilter();
         ResetObjectiveCombatState();
         _rewardAttempt = null;
         Navigator.Clear();
