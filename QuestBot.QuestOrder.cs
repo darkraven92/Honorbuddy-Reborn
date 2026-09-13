@@ -66,6 +66,7 @@ public sealed partial class QuestBot
         {
             _questOrderProfile = profile;
             _profileNodeIndex = 0;
+            ResetObjectiveCombatState();
             _turnInNpcGuid = 0;
             _turnInNpc = null;
             _questGiverSearchDestination = null;
@@ -124,10 +125,8 @@ public sealed partial class QuestBot
                         $"Quest {objective.QuestId}: profile MobId/KillCount does not identify one matching WDB slot.");
                 int slot = slots[0];
                 if (state.Done[slot] < objective.KillCount)
-                    return SetQuestOrderDecision(QuestDecisionKind.ObjectiveInProgress,
-                        $"Quest {objective.QuestId} objective[{slot}]: entry={objective.MobId} " +
-                        $"progress={state.Done[slot]}/{objective.KillCount}; objective combat execution is not connected yet.",
-                        objective.MobId);
+                    return EvaluateKillObjective(objective, state.Done[slot]);
+                ResetObjectiveCombatState();
                 AdvanceQuestOrder($"Objective quest={objective.QuestId} entry={objective.MobId} " +
                     $"progress={state.Done[slot]}/{objective.KillCount}");
                 continue;
@@ -192,6 +191,7 @@ public sealed partial class QuestBot
         _clientTargetSynchronized = false;
         SynchronizedClientTargetGuid = 0;
         _activeHotspot = null;
+        ResetObjectiveCombatState();
         _turnInNpc = null;
         _turnInNpcGuid = 0;
         _questGiverSearchDestination = null;

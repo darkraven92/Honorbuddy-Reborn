@@ -129,6 +129,7 @@ public sealed partial class QuestBot : BotBase
 
     public override void Start()
     {
+        ResetObjectiveCombatState(resetCounters: true);
         _rewardAttempt = null;
         _profileNodeIndex = 0;
         _questOrderProfile = null;
@@ -179,7 +180,12 @@ public sealed partial class QuestBot : BotBase
             : "Evaluating patrol/client-target profile on WoW 1.12.1.5875";
     }
 
-    public override void Stop() { _rewardAttempt = null; Navigator.Clear(); }
+    public override void Stop()
+    {
+        ResetObjectiveCombatState();
+        _rewardAttempt = null;
+        Navigator.Clear();
+    }
     public override void Pulse() => PulseCalls++;
     public void EvaluateNow() => EvaluateDecision();
 
@@ -345,7 +351,25 @@ public sealed partial class QuestBot : BotBase
 
     private void ExecuteCurrentDecision()
     {
-        if (!MovementExecutionEnabled || MovementGoalReached || MovementAborted)
+        if (MovementGoalReached || MovementAborted)
+            return;
+
+        // KillMob execution remains part of QuestOrder, while targeting,
+        // movement and combat stay delegated to their existing Honorbuddy
+        // layers. Combat is separately armed so routing diagnostics cannot fight.
+        if (CurrentDecision.Kind == QuestDecisionKind.ObjectiveInProgress)
+        {
+            if (ObjectiveCombatExecutionEnabled)
+                ExecuteObjectiveCombatDecision();
+            else
+            {
+                Navigator.Clear();
+                ResetProgressTracking();
+            }
+            return;
+        }
+
+        if (!MovementExecutionEnabled)
             return;
 
         // Waiting for quest data or interaction is not a navigation stall.

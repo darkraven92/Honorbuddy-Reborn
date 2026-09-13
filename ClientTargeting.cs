@@ -77,7 +77,8 @@ public static class ClientTargetSelector5875
         int maxTabAttempts = 12,
         int settleMilliseconds = 150,
         double minimumDistance = 0.0,
-        double maximumDistance = double.PositiveInfinity)
+        double maximumDistance = double.PositiveInfinity,
+        uint requiredEntry = 0)
     {
         ArgumentNullException.ThrowIfNull(input);
         ArgumentNullException.ThrowIfNull(profile);
@@ -100,6 +101,7 @@ public static class ClientTargetSelector5875
                 initial,
                 minimumDistance,
                 maximumDistance,
+                requiredEntry,
                 out ClientTargetAttempt? initialAttempt))
         {
             attempts.Add(initialAttempt!);
@@ -148,6 +150,7 @@ public static class ClientTargetSelector5875
                 unit.MyReaction == WoWUnitReaction.Hostile &&
                 strict &&
                 profileCandidate &&
+                EntryMatches(unit.Entry, requiredEntry) &&
                 distanceAccepted)
             {
                 string reason = guid == preferredGuid
@@ -173,6 +176,7 @@ public static class ClientTargetSelector5875
         ulong guid,
         double minimumDistance,
         double maximumDistance,
+        uint requiredEntry,
         out ClientTargetAttempt? attempt)
     {
         WoWUnit? unit = guid == 0 ? null : ObjectManager.GetObjectByGuid<WoWUnit>(guid);
@@ -198,8 +202,12 @@ public static class ClientTargetSelector5875
                unit.MyReaction == WoWUnitReaction.Hostile &&
                strict &&
                profileCandidate &&
+               EntryMatches(unit.Entry, requiredEntry) &&
                distanceAccepted;
     }
+
+    internal static bool EntryMatches(uint actualEntry, uint requiredEntry)
+        => requiredEntry == 0 || actualEntry == requiredEntry;
 
     public static bool EnsureCleared(UInputClientTargeting input, int settleMilliseconds = 130)
     {
