@@ -5,7 +5,8 @@ Navigator använder nu en `INavigationProvider` med VMaNGOS/Detour-mesh och
 `IPlayerMover` för rörelse. Bygginstruktioner, offlineprov och liveprov finns där.
 
 Questdialog och belöningsflöde dokumenteras i [steg 10](QuestRewardStep10/README.md).
-En fullständig Orc-questprofil för 4641, 788 och 789 återstår.
+[Orc-routing för 4641, 788 och 789](OrcRoutingStep12/README.md) har nu en profil och
+tester av QuestOrder samt verkliga meshvägar. Full questautomation återstår.
 
 ## Tidigare CombatRoutine-prov
 

@@ -12,6 +12,8 @@ namespace Bots.Quest;
 internal sealed record QuestOrderSnapshot(bool Active, bool Completed, bool Failed,
     int[] Ids, int[] Required, ushort[] Done, string? Error = null)
 {
+    internal int[] ItemIds { get; init; } = [];
+    internal int[] ItemRequired { get; init; } = [];
     internal static QuestOrderSnapshot Missing(string message) =>
         new(false, false, false, [], [], [], message);
 }
@@ -44,7 +46,8 @@ public sealed partial class QuestBot
             try
             {
                 return new(true, completed, failed, quest.NormalObjectiveIDs,
-                    quest.NormalObjectiveRequiredCounts, descriptor.ObjectivesDone);
+                    quest.NormalObjectiveRequiredCounts, descriptor.ObjectivesDone)
+                    { ItemIds = quest.CollectItemIDs, ItemRequired = quest.CollectItemCounts };
             }
             catch (InvalidOperationException ex)
             {
@@ -65,6 +68,8 @@ public sealed partial class QuestBot
             _profileNodeIndex = 0;
             _turnInNpcGuid = 0;
             _turnInNpc = null;
+            _questGiverSearchDestination = null;
+            _questGiverSearchArrived = false;
         }
         if (profile.QuestOrder.Count == 0) return false;
         var snapshots = new Dictionary<uint, QuestOrderSnapshot>();
@@ -80,6 +85,30 @@ public sealed partial class QuestBot
             ProfileNode node = profile.QuestOrder[_profileNodeIndex];
             if (node is ObjectiveNode objective)
             {
+                if (objective.Type == "CollectItem")
+                {
+                    var collection = Read(objective.QuestId);
+                    if (!collection.Active || collection.Failed || collection.Error is not null)
+                        return BlockQuest(objective.QuestId, collection);
+                    if (collection.ItemIds.Length != 4 || collection.ItemRequired.Length != 4 ||
+                        collection.Ids.Length != 4 || collection.Required.Length != 4 ||
+                        objective.ItemId == 0 || objective.CollectCount <= 0 ||
+                        collection.ItemIds.Count(id => id != 0) != 1 || collection.Ids.Any(id => id != 0) ||
+                        collection.Required.Any(count => count != 0) ||
+                        Enumerable.Range(0, 4).Any(i => collection.ItemIds[i] < 0 || collection.ItemRequired[i] < 0 ||
+                            (collection.ItemIds[i] == 0) != (collection.ItemRequired[i] == 0)))
+                        return SetQuestOrderDecision(QuestDecisionKind.QuestStateBlocked,
+                            "CollectItem currently requires a quest with one collection requirement and no other objective types; per-item inventory progress is unavailable.");
+                    int itemSlot = Array.FindIndex(collection.ItemIds, id => id == objective.ItemId);
+                    if (itemSlot < 0 || collection.ItemRequired[itemSlot] != objective.CollectCount)
+                        return SetQuestOrderDecision(QuestDecisionKind.QuestStateBlocked,
+                            $"Quest {objective.QuestId}: profile ItemId/CollectCount does not match the WDB requirement.");
+                    if (!collection.Completed)
+                        return SetQuestOrderDecision(QuestDecisionKind.ObjectiveInProgress,
+                            $"Quest {objective.QuestId}: collect item={objective.ItemId} required={objective.CollectCount}; inventory count unknown; live quest completion is false.");
+                    AdvanceQuestOrder($"CollectItem quest={objective.QuestId}: matching single-item WDB requirement and live quest completion confirmed");
+                    continue;
+                }
                 if (objective.Type != "KillMob")
                     return SetQuestOrderDecision(QuestDecisionKind.UnsupportedProfileNode,
                         $"Objective type '{objective.Type}' is not implemented; node retained.");
@@ -108,11 +137,14 @@ public sealed partial class QuestBot
                 var state = Read(pick.QuestId);
                 if (pick.QuestId == 0 || pick.GiverId == 0)
                     return SetQuestOrderDecision(QuestDecisionKind.QuestStateBlocked, "PickUp has invalid quest/NPC IDs.");
+                if (state.Failed) return BlockQuest(pick.QuestId, state);
                 if (state.Active && !state.Failed)
                 {
                     AdvanceQuestOrder($"PickUp quest={pick.QuestId} already active");
                     continue;
                 }
+                if (ResolveQuestGiverLocations)
+                    return EvaluateQuestGiverLocation(pick.QuestId, pick.GiverId, pick.Location, "PickUp");
                 return SetQuestOrderDecision(QuestDecisionKind.QuestInteractionDeferred,
                     $"PickUp quest={pick.QuestId} giver={pick.GiverId}: acceptance is not implemented; node retained.", pick.GiverId);
             }
@@ -160,6 +192,10 @@ public sealed partial class QuestBot
         _clientTargetSynchronized = false;
         SynchronizedClientTargetGuid = 0;
         _activeHotspot = null;
+        _turnInNpc = null;
+        _turnInNpcGuid = 0;
+        _questGiverSearchDestination = null;
+        _questGiverSearchArrived = false;
         if (MovementExecutionEnabled) Navigator.Clear();
     }
 }

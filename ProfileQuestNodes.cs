@@ -29,6 +29,7 @@ public sealed class PickUpNode : ProfileNode
     }
     public uint QuestId { get; }
     public uint GiverId { get; }
+    public WoWPoint? Location { get; init; }
 }
 
 public sealed class TurnInNode : ProfileNode
@@ -40,6 +41,7 @@ public sealed class TurnInNode : ProfileNode
     }
     public uint QuestId { get; }
     public uint TurnInId { get; }
+    public WoWPoint? Location { get; init; }
 }
 
 // Follows the existing reconstruction's ProfileNode naming convention.
@@ -57,6 +59,8 @@ public sealed class ObjectiveNode : ProfileNode
     public string Type { get; }
     public uint MobId { get; }
     public int KillCount { get; }
+    public uint ItemId { get; init; }
+    public int CollectCount { get; init; }
 }
 
 public sealed class UseItemNode : ProfileNode

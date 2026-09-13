@@ -134,14 +134,16 @@ public sealed class Profile
             ProfileNode node = name switch
             {
                 "GrindTo" => new GrindToNode { GoalText = goalText },
-                "MoveTo" when TryParsePoint(element, out WoWPoint p)
-                    => new MoveToNode(p) { GoalText = goalText },
+                "MoveTo" => new MoveToNode(ParseOptionalPoint(element) ??
+                    throw new InvalidDataException("MoveTo requires finite X, Y and Z coordinates.")) { GoalText = goalText },
                 "PickUp" => new PickUpNode(
                     ParseUInt(Attr(element, "QuestId")),
-                    ParseUInt(Attr(element, "GiverId") ?? Attr(element, "QuestGiverId"))) { GoalText = goalText },
+                    ParseUInt(Attr(element, "GiverId") ?? Attr(element, "QuestGiverId")))
+                    { GoalText = goalText, Location = ParseOptionalPoint(element) },
                 "TurnIn" => new TurnInNode(
                     ParseUInt(Attr(element, "QuestId")),
-                    ParseUInt(Attr(element, "TurnInId") ?? Attr(element, "QuestGiverId"))) { GoalText = goalText },
+                    ParseUInt(Attr(element, "TurnInId") ?? Attr(element, "QuestGiverId")))
+                    { GoalText = goalText, Location = ParseOptionalPoint(element) },
                 "Objective" => ParseObjective(element, goalText),
                 "UseItem" => new UseItemNode(
                     ParseUInt(Attr(element, "ItemId") ?? Attr(element, "Id"))) { GoalText = goalText },
@@ -157,12 +159,17 @@ public sealed class Profile
         string type = Attr(element, "Type") ?? string.Empty;
         uint mobId = ParseUInt(Attr(element, "MobId"));
         int count = ParseInt(Attr(element, "KillCount"), 0);
+        uint itemId = ParseUInt(Attr(element, "ItemId"));
+        int collectCount = ParseInt(Attr(element, "CollectCount"), 0);
         if (questId == 0 || type.Length == 0)
             throw new InvalidDataException("Objective requires a positive QuestId and a Type.");
         if (type == "KillMob" && (mobId == 0 || mobId > int.MaxValue || count <= 0))
             throw new InvalidDataException("KillMob Objective requires a positive MobId and KillCount.");
+        if (type == "CollectItem" && (itemId == 0 || itemId > int.MaxValue || collectCount <= 0))
+            throw new InvalidDataException("CollectItem Objective requires a positive ItemId and CollectCount.");
         // Other types remain visible and block execution instead of being skipped.
-        return new ObjectiveNode(questId, type, mobId, count) { GoalText = goalText };
+        return new ObjectiveNode(questId, type, mobId, count)
+            { GoalText = goalText, ItemId = itemId, CollectCount = collectCount };
     }
 
     private static void ParseAvoidMobs(XElement root, HashSet<uint> output)
@@ -207,7 +214,16 @@ public sealed class Profile
         bool okY = float.TryParse(Attr(element, "Y"), NumberStyles.Float, CultureInfo.InvariantCulture, out float y);
         bool okZ = float.TryParse(Attr(element, "Z"), NumberStyles.Float, CultureInfo.InvariantCulture, out float z);
         point = new WoWPoint(x, y, z);
-        return okX && okY && okZ;
+        return okX && okY && okZ && float.IsFinite(x) && float.IsFinite(y) && float.IsFinite(z);
+    }
+
+    private static WoWPoint? ParseOptionalPoint(XElement element)
+    {
+        if (Attr(element, "X") is null && Attr(element, "Y") is null && Attr(element, "Z") is null)
+            return null;
+        if (!TryParsePoint(element, out WoWPoint point))
+            throw new InvalidDataException($"{element.Name.LocalName} requires all three finite X, Y and Z coordinates when a location is supplied.");
+        return point;
     }
 
     private static void ParseUIntList(string? text, HashSet<uint> output)

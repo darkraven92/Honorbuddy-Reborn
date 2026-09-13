@@ -14,6 +14,8 @@ public sealed partial class QuestBot
 {
     private ulong _turnInNpcGuid;
     private QuestGiverSnapshot? _turnInNpc;
+    private WoWPoint? _questGiverSearchDestination;
+    private bool _questGiverSearchArrived;
     // Internal switches/injection are for diagnostics; normal QuestBot resolves NPCs.
     internal bool ResolveQuestGiverLocations { get; set; } = true;
     internal Func<uint, ulong, QuestGiverSnapshot?> ReadQuestGiver { get; set; } = ReadLiveQuestGiver;
@@ -56,19 +58,32 @@ public sealed partial class QuestBot
         double.IsFinite(n.Distance2D) && n.Distance2D >= 0 &&
         float.IsFinite(n.InteractRange) && n.InteractRange > 0;
 
-    private bool EvaluateTurnInLocation(TurnInNode turn)
+    private bool EvaluateTurnInLocation(TurnInNode turn) =>
+        EvaluateQuestGiverLocation(turn.QuestId, turn.TurnInId, turn.Location, "TurnIn");
+
+    private bool EvaluateQuestGiverLocation(uint questId, uint entry, WoWPoint? fallback, string operation)
     {
-        QuestGiverSnapshot? npc = ReadQuestGiver(turn.TurnInId, _turnInNpcGuid);
-        if (npc is null || !UsableQuestGiver(turn.TurnInId, npc))
+        QuestGiverSnapshot? npc = ReadQuestGiver(entry, _turnInNpcGuid);
+        if (npc is null || !UsableQuestGiver(entry, npc))
         {
             _turnInNpcGuid = 0;
             _turnInNpc = null;
+            if (fallback is WoWPoint search && Finite(search) && !_questGiverSearchArrived)
+            {
+                _questGiverSearchDestination = search;
+                CurrentDecision = new(QuestDecisionKind.MoveToQuestGiver,
+                    $"{operation} quest={questId}: NPC entry={entry} is not loaded; search at profile location {search}; node retained.",
+                    Entry: entry, Destination: search);
+                TreeRoot.StatusText = CurrentDecision.Description;
+                return true;
+            }
             return SetQuestOrderDecision(QuestDecisionKind.QuestGiverUnavailable,
-                $"TurnIn quest={turn.QuestId}: no usable live NPC entry={turn.TurnInId} in ObjectManager; node retained.",
-                turn.TurnInId);
+                $"{operation} quest={questId}: no usable live NPC entry={entry} in ObjectManager" +
+                (_questGiverSearchArrived ? " after reaching the profile location" : "") + "; node retained.", entry);
         }
         _turnInNpc = npc;
         _turnInNpcGuid = npc.Guid;
+        _questGiverSearchDestination = null;
         // Stop half a yard inside the model's interaction radius to avoid edge oscillation.
         double stopDistance = Math.Max(0.1, npc.InteractRange - 0.5);
         QuestDecisionKind kind;
@@ -77,13 +92,13 @@ public sealed partial class QuestBot
             (npc.Distance <= stopDistance || npc.Distance2D <= Navigator.PathPrecision))
         {
             kind = QuestDecisionKind.QuestGiverInRange;
-            description = $"TurnIn quest={turn.QuestId}: NPC {npc.Entry} within modeled interaction range " +
+            description = $"{operation} quest={questId}: NPC {npc.Entry} within modeled interaction range " +
                 $"({npc.Distance:F2}/{npc.InteractRange:F2}); interaction pending; node retained.";
         }
         else
         {
             kind = QuestDecisionKind.MoveToQuestGiver;
-            description = $"Approach turn-in NPC {npc.Entry}: guid=0x{npc.Guid:X16} " +
+            description = $"Approach {operation} NPC {npc.Entry}: guid=0x{npc.Guid:X16} " +
                 $"distance={npc.Distance:F2}, destination={npc.Location}.";
         }
         CurrentDecision = new(kind, description, npc.Guid, npc.Entry, npc.Location);
@@ -91,10 +106,13 @@ public sealed partial class QuestBot
         return true;
     }
 
-    private void ExecuteQuestGiverApproach()
+    internal void ExecuteQuestGiverApproach()
     {
         var npc = _turnInNpc;
-        if (npc is null || npc.Guid != CurrentDecision.TargetGuid ||
+        bool searching = npc is null && CurrentDecision.TargetGuid == 0 &&
+            _questGiverSearchDestination is WoWPoint search &&
+            CurrentDecision.Destination is WoWPoint planned && search.Distance(planned) < 0.001;
+        if ((!searching && (npc is null || npc.Guid != CurrentDecision.TargetGuid)) ||
             CurrentDecision.Destination is not WoWPoint destination)
         {
             AbortMovement("quest giver snapshot is unavailable");
@@ -105,6 +123,8 @@ public sealed partial class QuestBot
         NavigatorMoveCalls++;
         if (LastMoveResult is MoveResult.Failed or MoveResult.PathGenerationFailed)
             AbortMovement("Navigator could not approach the quest giver");
+        else if (LastMoveResult == MoveResult.ReachedDestination && searching)
+            _questGiverSearchArrived = true;
         // Reaching this point never consumes TurnIn or marks the quest rewarded.
         // The next object pulse refreshes the distance and stops movement in range.
     }

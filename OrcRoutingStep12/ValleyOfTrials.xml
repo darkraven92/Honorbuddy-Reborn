@@ -1,0 +1,26 @@
+<HBProfile>
+  <Name>Orc Valley of Trials - 4641, 788, 789 routing</Name>
+  <ContinentId>1</ContinentId>
+  <MinLevel>1</MinLevel>
+  <MaxLevel>5</MaxLevel>
+  <!-- Vanilla NPC relations and spawn locations: see EVIDENCE.md.
+       Quest acceptance, combat and loot are not yet automated by this profile. -->
+  <QuestOrder>
+    <PickUp QuestName="Your Place In The World" QuestId="4641" GiverName="Kaltunk" GiverId="10176"
+            X="-607.434" Y="-4251.33" Z="39.0393" />
+    <TurnIn QuestName="Your Place In The World" QuestId="4641" TurnInName="Gornek" TurnInId="3143"
+            X="-600.132" Y="-4186.19" Z="41.2663" />
+    <PickUp QuestName="Cutting Teeth" QuestId="788" GiverName="Gornek" GiverId="3143"
+            X="-600.132" Y="-4186.19" Z="41.2663" />
+    <MoveTo X="-516.59" Y="-4286.81" Z="40.0634" GoalText="Approach the Mottled Boar area" />
+    <Objective QuestName="Cutting Teeth" QuestId="788" Type="KillMob" MobId="3098" KillCount="10" />
+    <TurnIn QuestName="Cutting Teeth" QuestId="788" TurnInName="Gornek" TurnInId="3143"
+            X="-600.132" Y="-4186.19" Z="41.2663" />
+    <PickUp QuestName="Sting of the Scorpid" QuestId="789" GiverName="Gornek" GiverId="3143"
+            X="-600.132" Y="-4186.19" Z="41.2663" />
+    <MoveTo X="-680.309" Y="-4145.69" Z="36.0694" GoalText="Approach the Scorpid Worker area" />
+    <Objective QuestName="Sting of the Scorpid" QuestId="789" Type="CollectItem" ItemId="4862" CollectCount="10" />
+    <TurnIn QuestName="Sting of the Scorpid" QuestId="789" TurnInName="Gornek" TurnInId="3143"
+            X="-600.132" Y="-4186.19" Z="41.2663" />
+  </QuestOrder>
+</HBProfile>

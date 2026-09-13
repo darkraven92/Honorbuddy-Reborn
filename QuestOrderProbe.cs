@@ -120,7 +120,7 @@ internal static class QuestOrderProbe
             Check(bot.CurrentDecision.Kind == QuestDecisionKind.QuestStateBlocked, "wrong WDB count");
             state = State(10, true) with { Ids = [3098, 3098, 0, 0], Required = [10, 10, 0, 0] }; Restart(objective + turn); Tick();
             Check(bot.CurrentDecision.Kind == QuestDecisionKind.QuestStateBlocked, "ambiguous matching slots");
-            state = State(10, true); Restart("<Objective QuestId=\"788\" Type=\"CollectItem\" />" + turn); Tick();
+            state = State(10, true); Restart("<Objective QuestId=\"788\" Type=\"UseObject\" />" + turn); Tick();
             Check(bot.CurrentDecision.Kind == QuestDecisionKind.UnsupportedProfileNode && bot.CurrentProfileNodeIndex == 0, "unsupported objective is not skipped");
             Restart("<If Condition=\"true\">" + objective + "</If>" + turn); Tick();
             Check(bot.CurrentDecision.Kind == QuestDecisionKind.UnsupportedProfileNode && bot.CurrentProfileNodeIndex == 0, "unknown control node is not skipped");

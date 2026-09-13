@@ -25,6 +25,8 @@ internal static class Program
         if (args.FirstOrDefault() == "--mesh-path-test") return NavigationProbe.Run(args);
         if (args.FirstOrDefault() == "--navigation-live-test") return NavigationLiveProbe.Run(args);
         if (args.FirstOrDefault() == "--navigation-self-test") return NavigationSelfTest.Run(args.Skip(1).FirstOrDefault());
+        if (args.FirstOrDefault() == "--quest-routing-self-test") return QuestRoutingSelfTest.Run(args.Skip(1).FirstOrDefault());
+        if (args.FirstOrDefault() == "--quest-routing-test") return QuestRoutingProbe.Run(args);
         if (args.Any(a => string.Equals(a, "--quest-reward-accept-self-test", StringComparison.OrdinalIgnoreCase)))
             return QuestRewardAcceptSelfTest.Run();
         int acceptTest = Array.FindIndex(args, a => string.Equals(a, "--quest-reward-accept-test", StringComparison.OrdinalIgnoreCase));

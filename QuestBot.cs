@@ -134,6 +134,8 @@ public sealed partial class QuestBot : BotBase
         _questOrderProfile = null;
         _turnInNpcGuid = 0;
         _turnInNpc = null;
+        _questGiverSearchDestination = null;
+        _questGiverSearchArrived = false;
         _activeHotspot = null;
         _stickyTargetGuid = 0;
         _releasedTargetGuids.Clear();
@@ -523,9 +525,31 @@ public sealed partial class QuestBot : BotBase
         _lastProgressAtUtc = DateTime.UtcNow;
     }
 
-    private void HandleDestinationReached()
+    internal void HandleDestinationReached()
     {
+        if (CurrentDecision.Kind is not (QuestDecisionKind.MoveToProfileLocation or QuestDecisionKind.MoveToHotspot))
+            return;
         Navigator.Clear();
+
+        if (CurrentDecision.Kind == QuestDecisionKind.MoveToProfileLocation)
+        {
+            if (!ReferenceEquals(_questOrderProfile, ProfileManager.CurrentProfile) ||
+                _profileNodeIndex >= _questOrderProfile.QuestOrder.Count ||
+                _questOrderProfile.QuestOrder[_profileNodeIndex] is not MoveToNode move ||
+                CurrentDecision.Destination is not WoWPoint destination || move.Destination.Distance(destination) >= 0.001)
+            {
+                AbortMovement("MoveTo result belongs to a stale profile decision");
+                return;
+            }
+            AdvanceQuestOrder($"MoveTo reached {destination} through Navigator");
+            ResetProgressTracking();
+            if (_profileNodeIndex < _questOrderProfile.QuestOrder.Count)
+            {
+                CurrentDecision = new(QuestDecisionKind.None, "MoveTo reached; next QuestOrder node pending.");
+                return;
+            }
+            SetQuestOrderDecision(QuestDecisionKind.ProfileComplete, "All QuestOrder nodes were consumed.");
+        }
 
         if (CurrentDecision.Kind == QuestDecisionKind.MoveToHotspot &&
             ProfileManager.CurrentProfile.GrindArea?.HotspotManager is { Hotspots.Count: > 0 } hotspots)

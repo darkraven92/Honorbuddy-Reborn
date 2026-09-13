@@ -32,7 +32,7 @@ internal static class NavigationLiveProbe
             Console.WriteLine($"PID={ObjectManager.WoWProcess!.Id}; map={navigation.MapId}; player={start}; health={me.CurrentHealth}/{me.MaxHealth}");
             Console.WriteLine($"Destination={destination}; complete={path.Length > 0}; points={path.Length}");
             foreach (var unit in ObjectManager.GetObjectsOfType<Styx.WoWInternals.WoWObjects.WoWUnit>(false, false)
-                .Where(u => u.IsValid && u.Entry is 3143 or 3144).OrderBy(u => u.Entry))
+                .Where(u => u.IsValid && u.Entry is 3143 or 10176).OrderBy(u => u.Entry))
                 Console.WriteLine($"NPC entry={unit.Entry}; position={unit.Location}; distance={unit.Distance2D:F2}");
             if (path.Length == 0) return 2;
             if (!execute)

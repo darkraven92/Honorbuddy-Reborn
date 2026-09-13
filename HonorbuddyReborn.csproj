@@ -11,6 +11,9 @@
     <Product>Honorbuddy Reborn 1.12.1</Product>
     <Description>Honorbuddy-compatible framework reconstruction for World of Warcraft 1.12.1 build 5875.</Description>
   </PropertyGroup>
+  <ItemGroup>
+    <None Update="OrcRoutingStep12/*.xml" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
   <Target Name="CopyNavigationLibrary" AfterTargets="Build" Condition="Exists('obj/navigation-native/libhb_navigation.so')">
     <Copy SourceFiles="obj/navigation-native/libhb_navigation.so" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" />
   </Target>
